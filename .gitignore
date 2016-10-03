@@ -1,4 +1,11 @@
 # Byte-compiled / optimized / DLL files
+bundled/*
+.vagrant
+Vagrantfile*
+zmq
+czmq
+zyre
+.idea
 __pycache__/
 *.py[cod]
 *$py.class
