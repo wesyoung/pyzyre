@@ -157,28 +157,36 @@ class Configure(build_ext):
 
         fetch_libzmq(bundledir)
 
-        stage_platform_hpp(pjoin(bundledir, 'zeromq'))
-
-        #tweetnacl = pjoin(bundledir, 'zeromq', 'tweetnacl')
-        #tweetnacl_sources = glob(pjoin(tweetnacl, 'src', '*.c'))
-        #randombytes = pjoin(tweetnacl, 'contrib', 'randombytes')
-        #if sys.platform.startswith('win'):
-        #    tweetnacl_sources.append(pjoin(randombytes, 'winrandom.c'))
-        #else:
-        #    tweetnacl_sources.append(pjoin(randombytes, 'devurandom.c'))
-
-        # construct the Extensions:
+        stage_platform_header(pjoin(bundledir, 'zeromq'))
 
         sources = [pjoin('buildutils', 'zmq', 'initlibzmq.c')]
         sources += glob(pjoin(bundledir, 'zeromq', 'src', '*.cpp'))
-        sources += glob(pjoin(bundledir, 'zeromq', 'src', 'tweetnacl.c'))
+
+        includes = [
+            pjoin(bundledir, 'zeromq', 'include')
+        ]
+
+        if bundled_version < (4, 2, 0):
+            tweetnacl = pjoin(bundledir, 'zeromq', 'tweetnacl')
+            tweetnacl_sources = glob(pjoin(tweetnacl, 'src', '*.c'))
+
+            randombytes = pjoin(tweetnacl, 'contrib', 'randombytes')
+            if sys.platform.startswith('win'):
+                tweetnacl_sources.append(pjoin(randombytes, 'winrandom.c'))
+            else:
+                tweetnacl_sources.append(pjoin(randombytes, 'devurandom.c'))
+
+            sources += tweetnacl_sources
+            includes.append(pjoin(tweetnacl, 'src'))
+            includes.append(randombytes)
+        else:
+            # >= 4.2
+            sources += glob(pjoin(bundledir, 'zeromq', 'src', 'tweetnacl.c'))
 
         libzmq = Extension(
             'czmq.libzmq',
             sources=sources,
-            include_dirs=[
-                pjoin(bundledir, 'zeromq', 'include'),
-            ],
+            include_dirs=includes,
         )
 
         # register the extension:
@@ -259,17 +267,6 @@ class Configure(build_ext):
                     # seem to need explicit libstdc++ on linux + pypy
                     # not sure why
                     libzmq.libraries.append("stdc++")
-
-        # # copy the header files to the source tree.
-        # bundledincludedir = pjoin('zmq', 'include')
-        # if not os.path.exists(bundledincludedir):
-        #     os.makedirs(bundledincludedir)
-        # if not os.path.exists(pjoin(self.build_lib, bundledincludedir)):
-        #     os.makedirs(pjoin(self.build_lib, bundledincludedir))
-        #
-        # for header in glob(pjoin(bundledir, 'zeromq', 'include', '*.h')):
-        #     shutil.copyfile(header, pjoin(bundledincludedir, basename(header)))
-        #     shutil.copyfile(header, pjoin(self.build_lib, bundledincludedir, basename(header)))
 
     def run(self):
         self.bundle_libzmq_extension()

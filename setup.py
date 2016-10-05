@@ -58,9 +58,10 @@ class zbuild_ext(build_ext_c):
         build_ext_c.build_extension(self, ext)
 
     def run(self):
-        self.distribution.run_command('configure')
-        self.distribution.run_command('configure_czmq')
+
         self.distribution.run_command('configure_zmq')
+        self.distribution.run_command('configure_czmq')
+        self.distribution.run_command('configure')
 
         return build_ext_c.run(self)
 

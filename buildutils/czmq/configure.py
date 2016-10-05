@@ -145,7 +145,7 @@ class Configure(build_ext):
         )
 
         # register the extension:
-        self.distribution.ext_modules.insert(0, libczmq)
+        self.distribution.ext_modules.insert(1, libczmq)
 
         libczmq.include_dirs.append(bundledir)
 

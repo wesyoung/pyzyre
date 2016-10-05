@@ -143,7 +143,7 @@ class Configure(build_ext):
         )
 
         # register the extension:
-        self.distribution.ext_modules.insert(0, libzyre)
+        self.distribution.ext_modules.insert(2, libzyre)
 
         libzyre.include_dirs.append(bundledir)
 

@@ -28,12 +28,12 @@ libzmq_url = "https://github.com/zeromq/zeromq{major}-{minor}/releases/download/
 )
 libzmq_checksum = "sha256:04aac57f081ffa3a2ee5ed04887be9e205df3a7ddade0027460b8042432bdbcf"
 
-# libzmq master
-bundled_version = (4, 2, 0)
-vs = '%i.%i.%i' % bundled_version
-libzmq = "zeromq-%s.tar.gz" % vs
-libzmq_url = 'https://github.com/zeromq/libzmq/archive/7f8c17b1241cfd0dfbe56a11a7d16939aa4cc49f.tar.gz'
-libzmq_checksum = 'sha256:59fed82a4f4499549634294960f9da44736ed9a0bf032ce9a8f5d72f40111cc1'
+# # libzmq master
+# bundled_version = (4, 2, 0)
+# vs = '%i.%i.%i' % bundled_version
+# libzmq = "zeromq-%s.tar.gz" % vs
+# libzmq_url = 'https://github.com/zeromq/libzmq/archive/7f8c17b1241cfd0dfbe56a11a7d16939aa4cc49f.tar.gz'
+# libzmq_checksum = 'sha256:59fed82a4f4499549634294960f9da44736ed9a0bf032ce9a8f5d72f40111cc1'
 
 HERE = os.path.dirname(__file__)
 ROOT = os.path.dirname(HERE)
