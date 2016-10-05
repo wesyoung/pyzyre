@@ -11,8 +11,10 @@ from distutils.command.build_ext import build_ext
 
 from glob import glob
 from os.path import basename, join as pjoin
+from os.path import basename, join as pjoin
+from subprocess import Popen, PIPE
 
-from .bundle import bundled_version, fetch_libzmq, stage_platform_hpp, localpath
+from .bundle import bundled_version, fetch_libzmq, localpath
 from .msg import fatal, warn, info, line
 
 
@@ -26,6 +28,9 @@ min_good_zmq = (3, 2)
 target_zmq = bundled_version
 dev_zmq = (target_zmq[0], target_zmq[1] + 1, 0)
 
+HERE = os.path.dirname(__file__)
+ROOT = os.path.dirname(HERE)
+
 # set dylib ext:
 if sys.platform.startswith('win'):
     lib_ext = '.dll'
@@ -33,6 +38,47 @@ elif sys.platform == 'darwin':
     lib_ext = '.dylib'
 else:
     lib_ext = '.so'
+
+
+def stage_platform_header(zmqroot):
+    platform_h = pjoin(zmqroot, 'src', 'platform.hpp')
+
+    if os.path.exists(platform_h):
+        info("already have platform.hpp")
+        return
+
+    if os.name == 'nt':
+        # stage msvc platform header
+        platform_dir = pjoin(zmqroot, 'builds', 'msvc')
+    else:
+        if not os.path.exists(pjoin(zmqroot, 'configure')):
+            info('attempting bash autogen.sh')
+            p = Popen('./autogen.sh', cwd=zmqroot, shell=True, stdout=PIPE, stderr=PIPE)
+            o, e = p.communicate()
+            if p.returncode:
+                raise RuntimeError('Failed to run autoconf...')
+
+        info("attempting ./configure to generate platform.h")
+
+        p = Popen('./configure', cwd=zmqroot, shell=True, stdout=PIPE, stderr=PIPE)
+
+        o, e = p.communicate()
+        if p.returncode:
+            warn("failed to configure libczmq:\n%s" % e)
+
+            if sys.platform == 'darwin':
+                platform_dir = pjoin(HERE, 'include_darwin')
+            elif sys.platform.startswith('freebsd'):
+                platform_dir = pjoin(HERE, 'include_freebsd')
+            elif sys.platform.startswith('linux-armv'):
+                platform_dir = pjoin(HERE, 'include_linux-armv')
+            else:
+                platform_dir = pjoin(HERE, 'include_linux')
+        else:
+            return
+
+    info("staging platform.h from: %s" % platform_dir)
+    shutil.copy(pjoin(platform_dir, 'platform.h'), platform_h)
 
 
 class Configure(build_ext):
@@ -113,24 +159,25 @@ class Configure(build_ext):
 
         stage_platform_hpp(pjoin(bundledir, 'zeromq'))
 
-        tweetnacl = pjoin(bundledir, 'zeromq', 'tweetnacl')
-        tweetnacl_sources = glob(pjoin(tweetnacl, 'src', '*.c'))
-        randombytes = pjoin(tweetnacl, 'contrib', 'randombytes')
-        if sys.platform.startswith('win'):
-            tweetnacl_sources.append(pjoin(randombytes, 'winrandom.c'))
-        else:
-            tweetnacl_sources.append(pjoin(randombytes, 'devurandom.c'))
+        #tweetnacl = pjoin(bundledir, 'zeromq', 'tweetnacl')
+        #tweetnacl_sources = glob(pjoin(tweetnacl, 'src', '*.c'))
+        #randombytes = pjoin(tweetnacl, 'contrib', 'randombytes')
+        #if sys.platform.startswith('win'):
+        #    tweetnacl_sources.append(pjoin(randombytes, 'winrandom.c'))
+        #else:
+        #    tweetnacl_sources.append(pjoin(randombytes, 'devurandom.c'))
 
         # construct the Extensions:
+
+        sources = [pjoin('buildutils', 'zmq', 'initlibzmq.c')]
+        sources += glob(pjoin(bundledir, 'zeromq', 'src', '*.cpp'))
+        sources += glob(pjoin(bundledir, 'zeromq', 'src', 'tweetnacl.c'))
+
         libzmq = Extension(
             'czmq.libzmq',
-            sources=[pjoin('buildutils', 'zmq', 'initlibzmq.c')] +
-                    glob(pjoin(bundledir, 'zeromq', 'src', '*.cpp')) +
-                    tweetnacl_sources,
+            sources=sources,
             include_dirs=[
                 pjoin(bundledir, 'zeromq', 'include'),
-                pjoin(tweetnacl, 'src'),
-                randombytes,
             ],
         )
 

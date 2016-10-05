@@ -27,6 +27,9 @@ libczmq_url = "https://github.com/zeromq/czmq/releases/download/v{vs}/{libczmq}"
 )
 libczmq_checksum = "sha256:8bca39ab69375fa4e981daf87b3feae85384d5b40cef6adbe9d5eb063357699a"
 
+bundled_version = (3, 0, 3)
+vs = '%i.%i.%i' % bundled_version
+libczmq = "czmq-%s.tar.gz" % vs
 libczmq_url = 'https://github.com/zeromq/czmq/archive/279e34c3cedb95a4efb487f82bdd8814d9f9f08c.tar.gz'
 libczmq_checksum = "sha256:eee9d3e029e891567fd9ee5515e981001d71405caca65950b2d7887cd611fae2"
 

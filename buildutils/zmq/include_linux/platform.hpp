@@ -10,6 +10,9 @@
 /* Define to 1 if you have the `clock_gettime' function. */
 #define HAVE_CLOCK_GETTIME 1
 
+/* define if the compiler supports basic C++11 syntax */
+#define HAVE_CXX11 1
+
 /* Define to 1 if you have the declaration of `LOCAL_PEERCRED', and to 0 if
    you don't. */
 #define HAVE_DECL_LOCAL_PEERCRED 0
@@ -39,14 +42,14 @@
 /* Define to 1 if you have the `gettimeofday' function. */
 #define HAVE_GETTIMEOFDAY 1
 
+/* Define to 1 if you have the <gssapi/gssapi_generic.h> header file. */
+/* #undef HAVE_GSSAPI_GSSAPI_GENERIC_H */
+
 /* Define to 1 if you have the <ifaddrs.h> header file. */
 #define HAVE_IFADDRS_H 1
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
-
-/* Define to 1 if you have the `gssapi_krb5' library (-lgssapi_krb5). */
-/* #undef HAVE_LIBGSSAPI_KRB5 */
 
 /* Define to 1 if you have the `iphlpapi' library (-liphlpapi). */
 /* #undef HAVE_LIBIPHLPAPI */
@@ -66,8 +69,8 @@
 /* Define to 1 if you have the `socket' library (-lsocket). */
 /* #undef HAVE_LIBSOCKET */
 
-/* The libsodium library is to be used. */
-/* #undef HAVE_LIBSODIUM */
+/* The libunwind library is to be used */
+/* #undef HAVE_LIBUNWIND */
 
 /* Define to 1 if you have the `ws2_32' library (-lws2_32). */
 /* #undef HAVE_LIBWS2_32 */
@@ -81,6 +84,9 @@
 /* Define to 1 if you have the `memset' function. */
 #define HAVE_MEMSET 1
 
+/* Define to 1 if you have the `mkdtemp' function. */
+#define HAVE_MKDTEMP 1
+
 /* Define to 1 if you have the <netinet/in.h> header file. */
 #define HAVE_NETINET_IN_H 1
 
@@ -89,6 +95,9 @@
 
 /* Define to 1 if you have the `perror' function. */
 #define HAVE_PERROR 1
+
+/* Define to 1 if you have the `posix_memalign' function. */
+#define HAVE_POSIX_MEMALIGN 1
 
 /* Define to 1 if you have the `socket' function. */
 #define HAVE_SOCKET 1
@@ -155,7 +164,7 @@
 #define PACKAGE_NAME "zeromq"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "zeromq 4.1.1"
+#define PACKAGE_STRING "zeromq 4.2.0"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "zeromq"
@@ -164,7 +173,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "4.1.1"
+#define PACKAGE_VERSION "4.2.0"
 
 /* Define as the return type of signal handlers (`int' or `void'). */
 #define RETSIGTYPE void
@@ -176,10 +185,13 @@
 #define TIME_WITH_SYS_TIME 1
 
 /* Version number of package */
-#define VERSION "4.1.1"
+#define VERSION "4.2.0"
 
 /* Enable militant API assertions */
 /* #undef ZMQ_ACT_MILITANT */
+
+/* Provide draft classes and methods */
+/* #undef ZMQ_BUILD_DRAFT_API */
 
 /* Force to use mutexes */
 /* #undef ZMQ_FORCE_MUTEXES */
@@ -190,14 +202,26 @@
 /* Have Android OS */
 /* #undef ZMQ_HAVE_ANDROID */
 
+/* Whether compiler has __atomic_Xxx intrinsics. */
+#define ZMQ_HAVE_ATOMIC_INTRINSICS 1
+
+/* Using curve encryption */
+#define ZMQ_HAVE_CURVE 1
+
 /* Have Cygwin */
 /* #undef ZMQ_HAVE_CYGWIN */
 
-/* Have eventfd extension. */
+/* Have DragonFly OS */
+/* #undef ZMQ_HAVE_DRAGONFLY */
+
+/* Have eventfd extension */
 #define ZMQ_HAVE_EVENTFD 1
 
 /* Have FreeBSD OS */
 /* #undef ZMQ_HAVE_FREEBSD */
+
+/* Have GNU/Hurd OS */
+/* #undef ZMQ_HAVE_GNU */
 
 /* Have HPUX OS */
 /* #undef ZMQ_HAVE_HPUX */
@@ -211,8 +235,8 @@
 /* Have LOCAL_PEERCRED socket option */
 /* #undef ZMQ_HAVE_LOCAL_PEERCRED */
 
-/* Have MinGW32 */
-/* #undef ZMQ_HAVE_MINGW32 */
+/* Have MinGW */
+/* #undef ZMQ_HAVE_MINGW */
 
 /* Have NetBSD OS */
 /* #undef ZMQ_HAVE_NETBSD */
@@ -262,8 +286,35 @@
 /* Have uio.h header. */
 #define ZMQ_HAVE_UIO 1
 
+/* Have VMCI transport */
+/* #undef ZMQ_HAVE_VMCI */
+
 /* Have Windows OS */
 /* #undef ZMQ_HAVE_WINDOWS */
+
+/* Use 'devpoll' polling system */
+/* #undef ZMQ_USE_DEVPOLL */
+
+/* Use 'epoll' polling system */
+#define ZMQ_USE_EPOLL 1
+
+/* Use 'kqueue' polling system */
+/* #undef ZMQ_USE_KQUEUE */
+
+/* Using libsodium for curve encryption */
+/* #undef ZMQ_USE_LIBSODIUM */
+
+/* Use 'poll' polling system */
+/* #undef ZMQ_USE_POLL */
+
+/* Use 'pollset' polling system */
+/* #undef ZMQ_USE_POLLSET */
+
+/* Use 'select' polling system */
+/* #undef ZMQ_USE_SELECT */
+
+/* Using tweetnacl for curve encryption */
+#define ZMQ_USE_TWEETNACL 1
 
 /* Define for Solaris 2.5.1 so the uint32_t typedef from <sys/synch.h>,
    <pthread.h>, or <semaphore.h> is not used. If the typedef were allowed, the

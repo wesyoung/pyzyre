@@ -28,8 +28,12 @@ libzmq_url = "https://github.com/zeromq/zeromq{major}-{minor}/releases/download/
 )
 libzmq_checksum = "sha256:04aac57f081ffa3a2ee5ed04887be9e205df3a7ddade0027460b8042432bdbcf"
 
-#libzmq_url = 'https://github.com/zeromq/libzmq/archive/6c1669371a484b22b2c59361de769b4680ac0a83.tar.gz'
-#libzmq_checksum = 'sha256:77e89dcb2a28c90914146f3a6623eb77b8492b85eb0c043acc51cfdb84c81420'
+# libzmq master
+bundled_version = (4, 2, 0)
+vs = '%i.%i.%i' % bundled_version
+libzmq = "zeromq-%s.tar.gz" % vs
+libzmq_url = 'https://github.com/zeromq/libzmq/archive/7f8c17b1241cfd0dfbe56a11a7d16939aa4cc49f.tar.gz'
+libzmq_checksum = 'sha256:59fed82a4f4499549634294960f9da44736ed9a0bf032ce9a8f5d72f40111cc1'
 
 HERE = os.path.dirname(__file__)
 ROOT = os.path.dirname(HERE)
@@ -100,41 +104,41 @@ def fetch_libzmq(savedir):
     shutil.move(with_version, dest)
 
 
-def stage_platform_hpp(zmqroot):
-    """stage platform.hpp into libzmq sources
-    
-    Tries ./configure first (except on Windows),
-    then falls back on included platform.hpp previously generated.
-    """
-    
-    platform_hpp = pjoin(zmqroot, 'src', 'platform.hpp')
-    if os.path.exists(platform_hpp):
-        info("already have platform.hpp")
-        return
-    if os.name == 'nt':
-        # stage msvc platform header
-        platform_dir = pjoin(zmqroot, 'builds', 'msvc')
-    else:
-        info("attempting ./configure to generate platform.hpp")
-        
-        p = Popen('./configure', cwd=zmqroot, shell=True, stdout=PIPE, stderr=PIPE)
-
-        o, e = p.communicate()
-        if p.returncode:
-            warn("failed to configure libzmq:\n%s" % e)
-            if sys.platform == 'darwin':
-                platform_dir = pjoin(HERE, 'include_darwin')
-            elif sys.platform.startswith('freebsd'):
-                platform_dir = pjoin(HERE, 'include_freebsd')
-            elif sys.platform.startswith('linux-armv'):
-                platform_dir = pjoin(HERE, 'include_linux-armv')
-            else:
-                platform_dir = pjoin(HERE, 'include_linux')
-        else:
-            return
-    
-    info("staging platform.hpp from: %s" % platform_dir)
-    shutil.copy(pjoin(platform_dir, 'platform.hpp'), platform_hpp)
+# def stage_platform_hpp(zmqroot):
+#     """stage platform.hpp into libzmq sources
+#
+#     Tries ./configure first (except on Windows),
+#     then falls back on included platform.hpp previously generated.
+#     """
+#
+#     platform_hpp = pjoin(zmqroot, 'src', 'platform.hpp')
+#     if os.path.exists(platform_hpp):
+#         info("already have platform.hpp")
+#         return
+#     if os.name == 'nt':
+#         # stage msvc platform header
+#         platform_dir = pjoin(zmqroot, 'builds', 'msvc')
+#     else:
+#         info("attempting ./configure to generate platform.hpp")
+#
+#         p = Popen('./configure', cwd=zmqroot, shell=True, stdout=PIPE, stderr=PIPE)
+#
+#         o, e = p.communicate()
+#         if p.returncode:
+#             warn("failed to configure libzmq:\n%s" % e)
+#             if sys.platform == 'darwin':
+#                 platform_dir = pjoin(HERE, 'include_darwin')
+#             elif sys.platform.startswith('freebsd'):
+#                 platform_dir = pjoin(HERE, 'include_freebsd')
+#             elif sys.platform.startswith('linux-armv'):
+#                 platform_dir = pjoin(HERE, 'include_linux-armv')
+#             else:
+#                 platform_dir = pjoin(HERE, 'include_linux')
+#         else:
+#             return
+#
+#     info("staging platform.hpp from: %s" % platform_dir)
+#     shutil.copy(pjoin(platform_dir, 'platform.hpp'), platform_hpp)
 
 
 def copy_and_patch_libzmq(ZMQ, libzmq):
