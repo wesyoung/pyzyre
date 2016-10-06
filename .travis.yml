@@ -13,7 +13,7 @@ python:
 
 before_install:
   - sudo apt-get update
-  - sudo apt-get install libuuid1
+  - sudo apt-get install uuid-dev libuuid1
   - pip install wheel cython
 
 install:
