@@ -21,11 +21,9 @@ install:
   - pip install dist/*.whl
 
 script:
-  - if [ -f dist/*.whl ]; then exit 0; else exit 1; fi
-  # need to finish zproject fixes upstream
-  #- python -c "import pyzyre; print(pyzyre.__version__)"
-  #- python -c "import zyre; print(zyre.Zyre)"
-  #- python -c "import czmq; print(czmq.Zactor)"
+  - python -c "import pyzyre; print(pyzyre.__version__)"
+  - python -c "import zyre; print(zyre.Zyre)"
+  - python -c "import czmq; print(czmq.Zactor)"
 
 notifications:
     email:
