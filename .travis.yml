@@ -18,6 +18,7 @@ before_install:
 
 install:
   - python setup.py build_ext bdist_wheel
+  - pip install dist/*.whl
 
 script:
   - python -c "import pyzyre; print(pyzyre.__version__)"
