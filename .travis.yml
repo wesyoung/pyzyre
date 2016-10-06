@@ -1,0 +1,23 @@
+sudo: required
+dist: trusty
+language: python
+
+cache:
+    apt
+    pip
+
+python:
+  - 2.7
+  - 3.4
+  - 3.5
+
+before_install:
+  - sudo apt-get update
+  - pip install wheel cython
+
+install:
+  - python setup.py build_ext bdist_wheel
+
+notifications:
+    email:
+        on_success: never
