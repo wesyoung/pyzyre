@@ -73,7 +73,6 @@ cmdclass = {
     'build_ext': zbuild_ext
 }
 
-#packages = find_packages(exclude=('buildutils/'))
 packages = ['pyzyre', 'czmq', 'zyre']
 
 package_data = {
@@ -96,9 +95,12 @@ setup(
     long_description="",
     license="LGPLV3",
     cmdclass=cmdclass,
+    install_requires=[
+        'netifaces',
+        'netaddr'
+    ],
     classifiers=[
         'Intended Audience :: Developers',
-        'Intended Audience :: System Administrators',
         'License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)',
     ],
 )
