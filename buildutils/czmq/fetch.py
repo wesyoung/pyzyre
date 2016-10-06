@@ -124,7 +124,7 @@ class FetchCommand(Command):
             shutil.rmtree(bundledir)
         if not os.path.exists(bundledir):
             os.makedirs(bundledir)
-        fetch_libzmq(bundledir)
+        #fetch_libzmq(bundledir)
         fetch_libczmq(bundledir)
         for tarball in glob(pjoin(bundledir, '*.tar.gz')):
             os.remove(tarball)
