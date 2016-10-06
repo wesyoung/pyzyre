@@ -21,7 +21,7 @@ install:
   - pip install dist/*.whl
 
 script:
-  - if [ -f dist/*.2whl ]; then exit 0; else exit 1; fi
+  - if [ -f dist/*.whl ]; then exit 0; else exit 1; fi
   # need to finish zproject fixes upstream
   #- python -c "import pyzyre; print(pyzyre.__version__)"
   #- python -c "import zyre; print(zyre.Zyre)"

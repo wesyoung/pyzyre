@@ -31,9 +31,16 @@ def stage_platform_header(zmqroot):
             if p.returncode:
                 raise RuntimeError('Failed to run autoconf...')
 
-        info("attempting ./configure to generate platform.h")
+        configure_cmd = [
+            'libzmq_CFLAGS=-I../zeromq/include',
+            'libzmq_LIBS=-L../zeromq/src',
+            'libczmq_CFLAGS=-I../czmq/include',
+            'libczmq_LIBS=-L../czmq/src',
+            './configure'
 
-        p = Popen('./configure', cwd=zmqroot, shell=True, stdout=PIPE, stderr=PIPE)
+        ]
+        info("attempting ./configure to generate platform.h with: {}".format(configure_cmd))
+        p = Popen(' '.join(configure_cmd), cwd=zmqroot, shell=True, stdout=PIPE, stderr=PIPE)
 
         o, e = p.communicate()
         if p.returncode:
