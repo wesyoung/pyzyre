@@ -19,6 +19,11 @@ before_install:
 install:
   - python setup.py build_ext bdist_wheel
 
+script:
+  - python -c "import pyzyre; print(pyzyre.__version__)"
+  - python -c "import zyre; print(zyre.Zyre)"
+  - python -c "import czmq; print(czmq.Zactor)"
+
 notifications:
     email:
         on_success: never
