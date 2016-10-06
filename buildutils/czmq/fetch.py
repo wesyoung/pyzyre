@@ -30,8 +30,8 @@ libczmq_checksum = "sha256:8bca39ab69375fa4e981daf87b3feae85384d5b40cef6adbe9d5e
 bundled_version = (3, 0, 3)
 vs = '%i.%i.%i' % bundled_version
 libczmq = "czmq-%s.tar.gz" % vs
-libczmq_url = 'https://github.com/zeromq/czmq/archive/279e34c3cedb95a4efb487f82bdd8814d9f9f08c.tar.gz'
-libczmq_checksum = "sha256:eee9d3e029e891567fd9ee5515e981001d71405caca65950b2d7887cd611fae2"
+libczmq_url = 'https://github.com/wesyoung/czmq/archive/bbd3194624531cdd5ca242170527754b21c876d4.tar.gz'
+libczmq_checksum = "sha256:c66f46805e6f57994d0a287b755e3c0bd6d417f6984f9393ea7d4266d820f8b5"
 
 HERE = os.path.dirname(__file__)
 ROOT = os.path.dirname(HERE)
