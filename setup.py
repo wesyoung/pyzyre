@@ -114,7 +114,7 @@ setup(
     install_requires=[
         'netifaces',
         'netaddr',
-        'cython',
+        'cython>=0.16',
         'pytest'
     ],
     classifiers=[
