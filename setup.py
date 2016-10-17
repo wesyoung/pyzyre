@@ -32,10 +32,18 @@ try:
 except Exception as e:
     raise ImportError('Cython >= 0.16 required')
 
-try:
-    cdll.LoadLibrary('libuuid.so')
-except OSError:
-    raise ImportError('Requires uuid-dev and libuuid1 to be installed')
+libuuid = 'libuuid.so'
+if sys.platform == 'darwin':
+    libuuid = 'libuuid.dylib'
+
+if sys.platform.startswith('win'):
+    libuuid = None
+
+if libuuid:
+    try:
+        cdll.LoadLibrary('libuuid.so')
+    except OSError:
+        raise ImportError('Requires uuid-dev and libuuid1 to be installed')
 
 pypy = 'PyPy' in sys.version
 
