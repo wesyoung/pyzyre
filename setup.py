@@ -10,6 +10,7 @@ import setuptools.command.build_py
 from buildutils.zmq.configure import Configure as ConfigureZmq
 from buildutils.czmq.configure import Configure as ConfigureCzmq
 from buildutils.zyre.configure import Configure as ConfigureZyre
+from ctypes import *
 
 from pprint import pprint
 
@@ -30,6 +31,11 @@ try:
         from Cython.Distutils import build_ext as build_ext_c
 except Exception as e:
     raise ImportError('Cython >= 0.16 required')
+
+try:
+    cdll.LoadLibrary('libuuid.so')
+except OSError:
+    raise ImportError('Requires uuid-dev and libuuid1 to be installed')
 
 pypy = 'PyPy' in sys.version
 
