@@ -42,6 +42,12 @@ elif sys.platform == 'darwin':
 else:
     lib_ext = '.so'
 
+for idx, arg in enumerate(list(sys.argv)):
+    if arg == 'egg_info':
+        sys.argv.pop(idx)
+        sys.argv.insert(idx, 'build')
+        sys.argv.insert(idx+1, 'egg_info')
+
 
 class zbuild_ext(build_ext_c):
 
