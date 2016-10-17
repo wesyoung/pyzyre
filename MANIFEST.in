@@ -1,2 +1,9 @@
 include versioneer.py
 include pyzyre/_version.py
+include Vagrantfile
+recursive-include examples *
+include README.md requirements.txt LICENSE
+recursive-include buildutils *
+recursive-exclude bundled *
+recursive-exclude zyre *
+recursive-exclude czmq *

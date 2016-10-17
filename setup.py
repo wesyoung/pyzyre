@@ -97,7 +97,9 @@ setup(
     cmdclass=cmdclass,
     install_requires=[
         'netifaces',
-        'netaddr'
+        'netaddr',
+        'cython',
+        'pytest'
     ],
     classifiers=[
         'Intended Audience :: Developers',
