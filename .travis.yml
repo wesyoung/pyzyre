@@ -21,9 +21,9 @@ install:
   - pip install dist/*.whl
 
 script:
-  - python -c "import pyzyre; print(pyzyre.__version__)"
-  - python -c "import zyre; print(zyre.Zyre)"
-  - python -c "import czmq; print(czmq.Zactor)"
+  - cd ~/ && python -c "import pyzyre; print(pyzyre.__version__)"
+  - cd ~/ && python -c "import zyre; print(zyre.Zyre)"
+  - cd ~/ && python -c "import czmq; print(czmq.Zactor)"
 
 notifications:
     email:
