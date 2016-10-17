@@ -5,7 +5,8 @@ from __future__ import with_statement, print_function
 import os
 import sys
 from distutils.version import LooseVersion
-from setuptools import setup
+from setuptools import setup, Command
+import setuptools.command.build_py
 from buildutils.zmq.configure import Configure as ConfigureZmq
 from buildutils.czmq.configure import Configure as ConfigureCzmq
 from buildutils.zyre.configure import Configure as ConfigureZyre
@@ -65,12 +66,21 @@ class zbuild_ext(build_ext_c):
 
         return build_ext_c.run(self)
 
+
+class BuildPyCommand(setuptools.command.build_py.build_py):
+  """Custom build command."""
+
+  def run(self):
+    self.run_command('build_ext')
+    setuptools.command.build_py.build_py.run(self)
+
 cmdclass = versioneer.get_cmdclass()
 cmdclass = {
     'configure': ConfigureZyre,
     'configure_zmq': ConfigureZmq,
     'configure_czmq': ConfigureCzmq,
-    'build_ext': zbuild_ext
+    'build_ext': zbuild_ext,
+    'build_py': BuildPyCommand,
 }
 
 packages = ['pyzyre', 'czmq', 'zyre']
