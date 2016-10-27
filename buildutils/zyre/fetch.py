@@ -29,7 +29,7 @@ libzyre_checksum = "sha256:8bca39ab69375fa4e981daf87b3feae85384d5b40cef6adbe9d5e
 
 commit = 'cdbaab7e67c8ec2c896ae1c13607f36194f2a196'
 libzyre_url = 'https://github.com/zeromq/zyre/archive/{}.tar.gz'.format(commit)
-libzyre_checksum = "sha256:ca5e1c0bbbf8c1c827923c5515900913e641f861f4af9236d82591c63b471b253"
+libzyre_checksum = "sha256:a5e1c0bbbf8c1c827923c5515900913e641f861f4af9236d82591c63b471b253"
 
 HERE = os.path.dirname(__file__)
 ROOT = os.path.dirname(HERE)
