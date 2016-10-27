@@ -32,16 +32,17 @@ try:
 except Exception as e:
     raise ImportError('Cython >= 0.16 required')
 
+
 libuuid = 'libuuid.so'
 if sys.platform == 'darwin':
-    libuuid = 'libuuid.dylib'
+    libuuid = '/opt/local/lib/libuuid.dylib'
 
 if sys.platform.startswith('win'):
     libuuid = None
 
 if libuuid:
     try:
-        cdll.LoadLibrary('libuuid.so')
+        cdll.LoadLibrary(libuuid)
     except OSError:
         raise ImportError('Requires uuid-dev and libuuid1 to be installed')
 
@@ -129,7 +130,8 @@ setup(
         'netifaces',
         'netaddr',
         'cython>=0.16',
-        'pytest'
+        'pytest',
+        'names'
     ],
     classifiers=[
         'Intended Audience :: Developers',

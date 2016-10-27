@@ -47,3 +47,15 @@ def resolve_endpoint(port, address=None, interface=None):
             except IndexError:
                 raise RuntimeError('unable to set endpoint address')
     return endpoint
+
+
+def resolve_gossip(port, address=None):
+    if not address:
+        address = resolve_endpoint(port)
+    elif len(address) <= 5:
+        # they sent us an interface...
+        address = resolve_endpoint(port, interface=address)
+    else:
+        address = resolve_endpoint(port, address)
+
+    return address
