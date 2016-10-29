@@ -30,6 +30,7 @@ if __name__ == '__main__':
     p.add_argument('--gossip-bind', help='bind gossip endpoint on this node')
     p.add_argument('--gossip-connect')
     p.add_argument('--beacon', help='use beacon instead of gossip', action='store_true')
+    p.add_argument('--beacon-listener', help='run in listening-only mode', action='store_true')
     p.add_argument('-i', '--interface', help='specify zsys_interface for beacon')
     p.add_argument('-l', '--endpoint', help='specify ip listening endpoint [default %(default)s]', default=endpoint)
 
@@ -50,6 +51,21 @@ if __name__ == '__main__':
         with Client(task=chat_task, channel=args.channel, loop=loop, gossip_bind=args.gossip_bind, endpoint=endpoint,
                     iface=args.interface) as client:
             client.start_zyre()
+            loop.add_handler(client.actor, handle_message, zmq.POLLIN)
+
+            try:
+                loop.start()
+            except KeyboardInterrupt:
+                logger.info('SIGINT Received')
+            except Exception as e:
+                logger.error(e)
+
+    elif args.beacon_listener:
+        with Client(task=chat_task, iface=args.interface, channel=args.channel, m_handler_cb=handle_message,
+                    beacon=args.beacon) as client:
+
+            client.start_zyre()
+            loop = ioloop.IOLoop.instance()
             loop.add_handler(client.actor, handle_message, zmq.POLLIN)
 
             try:
