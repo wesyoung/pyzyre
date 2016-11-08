@@ -126,16 +126,25 @@ setup(
     long_description="",
     license="LGPLV3",
     cmdclass=cmdclass,
+    tests_requires=[
+        'pytest',
+    ],
     install_requires=[
         'netifaces',
         'netaddr',
         'cython>=0.16',
-        'pytest',
-        'names'
+        'names',
+        'pyzmq',
+        'tornado',
     ],
     classifiers=[
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)',
     ],
+    entry_points={
+        'console_scripts': [
+            'zyre-chat=pyzyre.chat:main',
+        ]
+    }
 )
 

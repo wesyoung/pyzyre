@@ -8,8 +8,7 @@ cache:
 
 python:
   - 2.7
-  #- 3.4
-  #- 3.5
+  #- 3.5 builds and names libzmq funny
 
 before_install:
   - sudo apt-get update
@@ -17,6 +16,7 @@ before_install:
   - pip install wheel cython
 
 install:
+  - pip wheel --wheel-dir=dist netifaces==0.10.0
   - python setup.py build_ext bdist_wheel
   - pip install dist/*.whl
 

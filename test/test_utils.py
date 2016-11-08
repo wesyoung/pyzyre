@@ -4,20 +4,20 @@ import sys
 
 
 @pytest.fixture
-def interface():
+def iface():
     if sys.platform == 'darwin':
         return 'en0'
     else:
         return 'eth0'
 
 
-def test_resolve_address(i):
-    addr = resolve_address(i)
+def test_resolve_address(iface):
+    addr = resolve_address(iface)
     assert addr
 
 
-def test_resolve_interface(i):
-    addr = resolve_address(i)
+def test_resolve_interface(iface):
+    addr = resolve_address(iface)
     assert addr
 
     i = resolve_interface(addr)
@@ -29,5 +29,6 @@ def test_resolve_endpoint():
     assert e
 
 
-def test_resolve_gossip(i):
-    e = resolve_gossip(5432, address=i)
+def test_resolve_gossip(iface):
+    e = resolve_gossip(5432, address=iface)
+    assert e

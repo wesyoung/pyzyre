@@ -1,20 +1,18 @@
 from zyre import Zyre, ZyreEvent
 import zmq
 import logging
-from czmq import Zactor, Zsock, zactor_fn, create_string_buffer, string_at, Zmsg, Zloop, zloop_reader_fn, Zproc
-from zmq.eventloop import ioloop
+from czmq import Zsock, string_at, Zmsg
 import names
 import uuid
+import sys
+from zmq.eventloop import ioloop
+from argparse import ArgumentParser
+from pyzyre.client import Client
+from pyzyre.utils import resolve_endpoint
+from pyzyre.constants import ZYRE_CHANNEL, LOG_FORMAT, SERVICE_PORT
+from pyzyre import color
 
-ioloop.install()
-
-GOSSIP_PORT = '49154'
-SERVICE_PORT = '49155'
-GOSSIP_ENDPOINT = 'zyre.local'
-GOSSIP_REMOTE = 'tcp://{}:{}'.format(GOSSIP_ENDPOINT, GOSSIP_PORT)
-CHANNEL = 'ZYRE'
-
-logger = logging.getLogger('')
+logger = logging.getLogger(__name__)
 
 
 def task(pipe, arg):
@@ -22,12 +20,16 @@ def task(pipe, arg):
     args = dict(item.split("=") for item in args.split(","))
 
     name = args.get('name', names.get_full_name())
-    chan = args.get('chan', CHANNEL)
+    chan = args.get('chan', ZYRE_CHANNEL)
+    verbose = args.get('verbose')
 
     logger.info('setting up node: %s' % name)
-
     n = Zyre(name)
-    n.set_verbose()
+
+    if verbose == '1':
+        logger.info('setting verbose...')
+        logger.setLevel(logging.DEBUG)
+        n.set_verbose()
 
     if args.get('endpoint'):
         logger.info('setting endpoint: {}'.format(args['endpoint']))
@@ -55,7 +57,10 @@ def task(pipe, arg):
     # registering
     poller.register(ss, zmq.POLLIN)
 
+    logger.info('staring node...')
     n.start()
+
+    logger.info('joining: %s' % chan)
     n.join(chan)
 
     pipe_zsock_s.signal(0)  # OK
@@ -90,40 +95,41 @@ def task(pipe, arg):
                         n.whisper(address, m)
                     else:
                         msg = message.popstr().decode('utf-8')
-                        logger.info('shouting {}'.format(msg))
                         n.shouts(chan, msg)
-            elif ss in items and items[ss] == zmq.POLLIN:
-                logger.info('found ZyreEvent')
 
+            elif ss in items and items[ss] == zmq.POLLIN:
                 e = ZyreEvent(n)
 
                 msg_type = e.type().decode('utf-8')
+                logger.debug('found ZyreEvent: %s' % msg_type)
 
-                logger.info(msg_type)
+                if msg_type == "ENTER":
+                    logger.debug('ENTER {} - {}'.format(e.peer_name(), e.peer_uuid()))
+                    peers[e.peer_name()] = e.peer_uuid()
+                    pipe_s.send_multipart(['ENTER', e.peer_uuid(), e.peer_name()])
+                    #headers = e.headers() # zlist
 
-                if msg_type == 'JOIN':
+                elif msg_type == 'JOIN':
                     logger.debug('JOIN [{}] [{}]'.format(e.group(), e.peer_name()))
                     pipe_s.send_multipart(['JOIN', e.peer_name(), e.group()])
-                elif msg_type == 'EXIT':
-                    logger.debug('EXIT [{}] [{}]'.format(e.group(), e.peer_name()))
-                    del peers[e.peer_name()]
-                    pipe_s.send_multipart(['EXIT', str(len(peers))])
-                    # if peer name starts with 0000_ we need to signal a re-connect somehow
-                elif msg_type == 'EVASIVE':
-                    logger.debug('EVASIVE {}'.format(e.peer_name()))
+
                 elif msg_type == "SHOUT":
                     m = e.get_msg().popstr()
                     logger.debug('SHOUT [{}] [{}]: {} - {}'.format(e.group(), e.peer_name(), e.peer_uuid(), m))
                     pipe_s.send_multipart(['SHOUT', e.group(), e.peer_name(), e.peer_uuid(), m])
+
                 elif msg_type == "WHISPER":
                     m = e.get_msg().popstr()
                     logger.debug('WHISPER [{}]: {}'.format(e.peer_name(), m))
                     pipe_s.send_multipart(['WHISPER', e.peer_name(), e.peer_uuid(), m])
-                elif msg_type == "ENTER":
-                    logger.debug('ENTER {} - {}'.format(e.peer_name(), e.peer_uuid()))
-                    peers[e.peer_name()] = e.peer_uuid()
-                    pipe_s.send_multipart(['ENTER', e.peer_uuid(), e.peer_name()])
-                    #headers = e.headers()
+
+                elif msg_type == 'EXIT':
+                    logger.debug('EXIT [{}] [{}]'.format(e.group(), e.peer_name()))
+                    del peers[e.peer_name()]
+                    pipe_s.send_multipart(['EXIT', str(len(peers))])
+
+                elif msg_type == 'EVASIVE':
+                    logger.debug('EVASIVE {}'.format(e.peer_name()))
 
                 else:
                     logger.warn('unknown message type: {}'.format(msg_type))
@@ -133,3 +139,88 @@ def task(pipe, arg):
     logger.info('shutting down...')
     n.stop()
 
+
+def main():
+    p = ArgumentParser()
+
+    endpoint = resolve_endpoint(SERVICE_PORT)
+
+    p.add_argument('--gossip-bind', help='bind gossip endpoint on this node')
+    p.add_argument('--gossip-connect')
+    p.add_argument('-i', '--interface', help='specify zsys_interface for beacon')
+    p.add_argument('-l', '--endpoint', help='specify ip listening endpoint [default %(default)s]', default=endpoint)
+    p.add_argument('-d', '--debug', help='enable debugging', action='store_true')
+
+    p.add_argument('--channel', default=ZYRE_CHANNEL)
+
+    args = p.parse_args()
+
+    loglevel = logging.INFO
+    verbose = False
+    if args.debug:
+        loglevel = logging.DEBUG
+        verbose = '1'
+
+    console = logging.StreamHandler()
+    logging.getLogger('').setLevel(loglevel)
+    console.setFormatter(logging.Formatter(LOG_FORMAT))
+    logging.getLogger('').addHandler(console)
+
+    def on_stdin(s, e):
+        content = s.readline()
+
+        if content.startswith('CLIENT:'):
+            address, message = content.split(' - ')
+            address = address.split(':')[1]
+            client.send_message(message, address=address)
+        else:
+            client.send_message(content.encode('utf-8'))
+
+    def handle_message(s, e):
+        m = s.recv_multipart()
+
+        logger.debug(m)
+
+        m_type = m.pop(0)
+
+        logger.info(m_type)
+
+        if m_type == 'ENTER':
+            logger.info("ENTER {}".format(m))
+
+        elif m_type == 'WHISPER':
+            peer, message = m
+            logger.info('[WHISPER:{}] {}'.format(peer, message))
+
+        else:
+            logger.warn("unhandled m_type {} rest of message is {}".format(m_type, m))
+
+    ioloop.install()
+    loop = ioloop.IOLoop.instance()
+
+    client = Client(
+        channel=args.channel,
+        loop=loop,
+        gossip_bind=args.gossip_bind,
+        gossip_connect=args.gossip_connect,
+        verbose=verbose,
+        interface=args.interface,
+        task=task
+    )
+
+    client.start_zyre()
+
+    loop.add_handler(client.actor, handle_message, zmq.POLLIN)
+    loop.add_handler(sys.stdin, on_stdin, ioloop.IOLoop.READ)
+
+    try:
+        loop.start()
+    except KeyboardInterrupt:
+        logger.info('SIGINT Received')
+    except Exception as e:
+        logger.error(e)
+
+    client.stop_zyre()
+
+if __name__ == '__main__':
+    main()
