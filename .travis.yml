@@ -13,14 +13,17 @@ python:
 before_install:
   - sudo apt-get update
   - sudo apt-get install uuid-dev libuuid1
+  - pip install pip --upgrade
   - pip install wheel cython
+  - pip wheel --wheel-dir=dist netifaces==0.10.0
+  - pip install -r dev_requirements.txt
 
 install:
-  - pip wheel --wheel-dir=dist netifaces==0.10.0
   - python setup.py build_ext bdist_wheel
   - pip install dist/*.whl
 
 script:
+  - python setup.py test
   - cd ~/ && python -c "import pyzyre; print(pyzyre.__version__)"
   - cd ~/ && python -c "import zyre; print(zyre.Zyre)"
   - cd ~/ && python -c "import czmq; print(czmq.Zactor)"

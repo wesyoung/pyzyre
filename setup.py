@@ -20,6 +20,23 @@ import versioneer
 if os.environ.get('USER') == 'vagrant' or os.path.isdir('/vagrant'):
     del os.link
 
+# https://www.pydanny.com/python-dot-py-tricks.html
+if sys.argv[-1] == 'test':
+    test_requirements = [
+        'pytest',
+    ]
+    try:
+        modules = map(__import__, test_requirements)
+    except ImportError as e:
+        err_msg = e.message.replace("No module named ", "")
+        msg = "%s is not installed. Install your test requirements." % err_msg
+        raise ImportError(msg)
+    r = os.system('py.test test -v')
+    if r == 0:
+        sys.exit()
+    else:
+        raise RuntimeError('tests failed')
+
 try:
     import Cython
     if LooseVersion(Cython.__version__) < LooseVersion('0.16'):
@@ -136,6 +153,7 @@ setup(
         'names',
         'pyzmq',
         'tornado',
+        'pyzmq>16.0.0'
     ],
     classifiers=[
         'Intended Audience :: Developers',

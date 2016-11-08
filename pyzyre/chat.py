@@ -12,7 +12,7 @@ from pyzyre.utils import resolve_endpoint
 from pyzyre.constants import ZYRE_CHANNEL, LOG_FORMAT, SERVICE_PORT
 from pyzyre import color
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('')
 
 
 def task(pipe, arg):
@@ -165,6 +165,7 @@ def main():
     logging.getLogger('').setLevel(loglevel)
     console.setFormatter(logging.Formatter(LOG_FORMAT))
     logging.getLogger('').addHandler(console)
+    logging.propagate = False
 
     def on_stdin(s, e):
         content = s.readline()

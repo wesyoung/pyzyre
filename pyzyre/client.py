@@ -9,10 +9,6 @@ from pprint import pprint
 from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_CHANNEL, LOG_FORMAT
 
 logger = logging.getLogger(__name__)
-console = logging.StreamHandler()
-console.setFormatter(logging.Formatter(LOG_FORMAT))
-logging.getLogger('').addHandler(console)
-
 
 class Client(object):
 
