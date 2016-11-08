@@ -143,9 +143,6 @@ setup(
     long_description="",
     license="LGPLV3",
     cmdclass=cmdclass,
-    test_requires=[
-        'pytest',
-    ],
     install_requires=[
         'netifaces',
         'netaddr',

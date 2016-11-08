@@ -19,12 +19,12 @@ before_install:
   - pip install -r dev_requirements.txt
 
 install:
-  - python setup.py develop
-  - python setup.py test
   - python setup.py bdist_wheel
   - pip install dist/*.whl
+  - rm -rf czmq zyre
 
 script:
+  - python setup.py test
   - cd ~/ && python -c "import pyzyre; print(pyzyre.__version__)"
   - cd ~/ && python -c "import zyre; print(zyre.Zyre)"
   - cd ~/ && python -c "import czmq; print(czmq.Zactor)"
