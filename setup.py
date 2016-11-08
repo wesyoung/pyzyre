@@ -143,7 +143,7 @@ setup(
     long_description="",
     license="LGPLV3",
     cmdclass=cmdclass,
-    tests_requires=[
+    test_requires=[
         'pytest',
     ],
     install_requires=[
