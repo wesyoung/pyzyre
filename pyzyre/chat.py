@@ -45,6 +45,15 @@ def task(pipe, arg):
         logger.info('setting endpoint: {}'.format(args['endpoint']))
         n.set_endpoint(args['endpoint'])
 
+    if not args.get('beacon'):
+        logger.info('setting up gossip')
+        if args.get('gossip_bind'):
+            logger.info('binding gossip')
+            n.gossip_bind(args['gossip_bind'])
+        else:
+            logger.info('connecting to gossip channel')
+            n.gossip_connect(args['gossip_connect'])
+
     poller = zmq.Poller()
 
     pipe_zsock_s = Zsock(pipe, False)
