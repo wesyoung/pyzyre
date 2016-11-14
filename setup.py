@@ -150,7 +150,7 @@ setup(
         'names',
         'pyzmq',
         'tornado',
-        'pyzmq>16.0.0'
+        'pyzmq>=16.0.1'
     ],
     classifiers=[
         'Intended Audience :: Developers',

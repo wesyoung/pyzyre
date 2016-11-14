@@ -10,9 +10,13 @@ from argparse import ArgumentParser
 from pyzyre.client import Client
 from pyzyre.utils import resolve_endpoint
 from pyzyre.constants import ZYRE_CHANNEL, LOG_FORMAT, SERVICE_PORT
+import os
 from pyzyre import color
 
 logger = logging.getLogger('')
+
+EVASIVE_TIMEOUT = os.environ.get('ZYRE_EVASIVE_TIMEOUT', 5000)  # zyre defaults
+EXPIRED_TIMEOUT = os.environ.get('ZYRE_EXPIRED_TIMEOUT', 30000)
 
 
 def task(pipe, arg):
@@ -26,6 +30,12 @@ def task(pipe, arg):
     logger.info('setting up node: %s' % name)
     n = Zyre(name)
 
+    logger.debug('setting evasive timeout: {}'.format(EVASIVE_TIMEOUT))
+    n.set_evasive_timeout(int(EVASIVE_TIMEOUT))
+
+    logger.debug('setting experation timer: {}'.format(EXPIRED_TIMEOUT))
+    n.set_expired_timeout(int(EXPIRED_TIMEOUT))
+
     if verbose == '1':
         logger.info('setting verbose...')
         logger.setLevel(logging.DEBUG)
@@ -34,6 +44,15 @@ def task(pipe, arg):
     if args.get('endpoint'):
         logger.info('setting endpoint: {}'.format(args['endpoint']))
         n.set_endpoint(args['endpoint'])
+
+    if not args.get('beacon'):
+        logger.info('setting up gossip')
+        if args.get('gossip_bind'):
+            logger.info('binding gossip')
+            n.gossip_bind(args['gossip_bind'])
+        else:
+            logger.info('connecting to gossip channel')
+            n.gossip_connect(args['gossip_connect'])
 
     poller = zmq.Poller()
 
