@@ -1,6 +1,6 @@
 import netifaces as ni
 import netaddr
-
+import os.path
 
 def resolve_interface(address):
     address = netaddr.IPAddress(address)
@@ -29,6 +29,16 @@ def resolve_endpoint(port, address=None, interface=None):
     endpoint = address
 
     if address:
+        import socket
+        try:
+            socket.inet_aton(address)
+        except socket.error:
+            if address.startswith('ipc://'):
+                return address
+
+            if os.path.basename(address):
+                return 'ipc://{}'.format(address)
+
         if 'tcp://' not in address:
             endpoint = 'tcp://%s' % address
 

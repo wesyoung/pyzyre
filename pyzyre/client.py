@@ -2,6 +2,7 @@ import zmq
 import logging
 from czmq import Zactor, zactor_fn, create_string_buffer
 import os
+import os.path
 from pyzyre.utils import resolve_gossip, resolve_endpoint
 import names
 from pprint import pprint

@@ -48,10 +48,10 @@ def task(pipe, arg):
     if not args.get('beacon'):
         logger.info('setting up gossip')
         if args.get('gossip_bind'):
-            logger.info('binding gossip')
+            logger.info('binding gossip: {}'.format(args['gossip_bind']))
             n.gossip_bind(args['gossip_bind'])
         else:
-            logger.info('connecting to gossip channel')
+            logger.info('connecting to gossip channel: {}'.format(args['gossip_connect']))
             n.gossip_connect(args['gossip_connect'])
 
     poller = zmq.Poller()
