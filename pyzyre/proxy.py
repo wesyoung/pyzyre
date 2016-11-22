@@ -44,7 +44,7 @@ def main():
         content = sys.stdin.read().strip('\n')
 
         if PYVERSION == 2:
-            content = unicode(content, 'utf-8')
+            content = unicode(content, encoding='utf-8', errors='ignore')
 
         logger.info('sending..')
         s.send_multipart([content.encode('utf-8')])
