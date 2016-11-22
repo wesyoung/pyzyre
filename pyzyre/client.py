@@ -7,7 +7,7 @@ from pyzyre.utils import resolve_gossip, resolve_endpoint
 import names
 from pprint import pprint
 from time import sleep
-from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_GROUP, LOG_FORMAT
+from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_GROUP, LOG_FORMAT, PYVERSION
 
 logger = logging.getLogger(__name__)
 
@@ -122,11 +122,13 @@ class Client(object):
         del self._actor
 
     def send_message(self, message, address=None):
+        if isinstance(message, str) and PYVERSION == 2:
+            message = unicode(message, 'utf-8')
 
         if address:
             logger.debug('sending whisper to %s' % address)
             self.actor.send_multipart(['whisper', address, message.encode('utf-8')])
             logger.debug('message sent via whisper')
         else:
-            self.actor.send_multipart(['shout', message.encode('utf_8')])
-            logger.debug('message sent via shout: {}'.format(message))
+            self.actor.send_multipart(['shout', message.encode('utf-8')])
+            #logger.debug('message sent via shout: {}'.format(message))
