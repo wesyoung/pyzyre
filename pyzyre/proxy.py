@@ -1,24 +1,17 @@
-from zyre import Zyre, ZyreEvent
-import zmq
 import logging
-from czmq import Zsock, string_at, Zmsg
-import names
-import uuid
-import sys
 from zmq.eventloop import ioloop
 from argparse import ArgumentParser
 from pyzyre.client import Client
 from pyzyre.chat import task
 import zmq
-from pyzyre.utils import resolve_endpoint
 from pyzyre.constants import ZYRE_CHANNEL, LOG_FORMAT, SERVICE_PORT
 import os
+import select
+import sys
+from pprint import pprint
 from pyzyre import color
 
 logger = logging.getLogger('')
-
-EVASIVE_TIMEOUT = os.environ.get('ZYRE_EVASIVE_TIMEOUT', 5000)  # zyre defaults
-EXPIRED_TIMEOUT = os.environ.get('ZYRE_EXPIRED_TIMEOUT', 30000)
 
 
 def main():
@@ -27,7 +20,7 @@ def main():
 
     p.add_argument('-i', '--interface', help='specify zsys_interface for beacon')
     p.add_argument('--channel', default=ZYRE_CHANNEL)
-    p.add_argument('--bind', default='ipc:///tmp/zyre.ipc')
+    p.add_argument('--address', default='ipc:///tmp/zyre.ipc')
 
     args = p.parse_args()
 
@@ -43,40 +36,51 @@ def main():
     logging.getLogger('').addHandler(console)
     logging.propagate = False
 
-    ioloop.install()
-    loop = ioloop.IOLoop.instance()
+    if select.select([sys.stdin, ], [], [], 0.0)[0]:
+        ctx = zmq.Context()
+        s = ctx.socket(zmq.PUSH)
+        s.connect(args.address)
 
-    zyre = Client(
-        channel=args.channel,
-        loop=loop,
-        verbose=verbose,
-        interface=args.interface,
-        task=task
-    )
+        content = sys.stdin.read().strip('\n')
+        logger.info('sending..')
+        s.send_multipart([content.encode('utf-8')])
 
-    def handle_message(s, e):
-        m = s.recv_multipart()
+    else:
+        logger.info('running proxy..')
+        ioloop.install()
+        loop = ioloop.IOLoop.instance()
 
-        logger.debug(m)
+        zyre = Client(
+            channel=args.channel,
+            loop=loop,
+            verbose=verbose,
+            interface=args.interface,
+            task=task
+        )
 
-        zyre.send_message(m[0].encode('utf-8'))
+        def handle_message(s, e):
+            m = s.recv_multipart()
 
-    zyre.start_zyre()
+            logger.debug(m)
 
-    ctx = zmq.Context()
-    s = ctx.socket(zmq.PULL)
-    s.bind(args.bind)
+            zyre.send_message(m[0].encode('utf-8'))
 
-    loop.add_handler(s, handle_message, zmq.POLLIN)
+        zyre.start_zyre()
 
-    try:
-        loop.start()
-    except KeyboardInterrupt:
-        logger.info('SIGINT Received')
-    except Exception as e:
-        logger.error(e)
+        ctx = zmq.Context()
+        s = ctx.socket(zmq.PULL)
+        s.bind(args.address)
 
-    zyre.stop_zyre()
+        loop.add_handler(s, handle_message, zmq.POLLIN)
+
+        try:
+            loop.start()
+        except KeyboardInterrupt:
+            logger.info('SIGINT Received')
+        except Exception as e:
+            logger.error(e)
+
+        zyre.stop_zyre()
 
 if __name__ == '__main__':
     main()
