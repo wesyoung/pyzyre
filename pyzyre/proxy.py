@@ -4,7 +4,7 @@ from argparse import ArgumentParser
 from pyzyre.client import Client
 from pyzyre.chat import task
 import zmq
-from pyzyre.constants import ZYRE_CHANNEL, LOG_FORMAT, SERVICE_PORT
+from pyzyre.constants import ZYRE_GROUP, LOG_FORMAT, SERVICE_PORT
 import os
 import select
 import sys
@@ -19,7 +19,7 @@ def main():
     p.add_argument('-d', '--debug', help='enable debugging', action='store_true')
 
     p.add_argument('-i', '--interface', help='specify zsys_interface for beacon')
-    p.add_argument('--channel', default=ZYRE_CHANNEL)
+    p.add_argument('--group', default=ZYRE_GROUP)
     p.add_argument('--address', default='ipc:///tmp/zyre.ipc')
 
     args = p.parse_args()
@@ -44,14 +44,15 @@ def main():
         content = sys.stdin.read().strip('\n')
         logger.info('sending..')
         s.send_multipart([content.encode('utf-8')])
-
+        logger.info('sent...')
+        s.close()
     else:
         logger.info('running proxy..')
         ioloop.install()
         loop = ioloop.IOLoop.instance()
 
         zyre = Client(
-            channel=args.channel,
+            group=args.group,
             loop=loop,
             verbose=verbose,
             interface=args.interface,
@@ -81,6 +82,8 @@ def main():
             logger.error(e)
 
         zyre.stop_zyre()
+
+    logger.info('done')
 
 if __name__ == '__main__':
     main()
