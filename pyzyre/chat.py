@@ -9,7 +9,7 @@ from zmq.eventloop import ioloop
 from argparse import ArgumentParser
 from pyzyre.client import Client
 from pyzyre.utils import resolve_endpoint
-from pyzyre.constants import ZYRE_CHANNEL, LOG_FORMAT, SERVICE_PORT
+from pyzyre.constants import ZYRE_GROUP, LOG_FORMAT, SERVICE_PORT
 import os
 from pyzyre import color
 
@@ -24,7 +24,7 @@ def task(pipe, arg):
     args = dict(item.split("=") for item in args.split(","))
 
     name = args.get('name', names.get_full_name())
-    chan = args.get('chan', ZYRE_CHANNEL)
+    group = args.get('group', ZYRE_GROUP)
     verbose = args.get('verbose')
 
     logger.info('setting up node: %s' % name)
@@ -51,7 +51,7 @@ def task(pipe, arg):
             logger.info('binding gossip: {}'.format(args['gossip_bind']))
             n.gossip_bind(args['gossip_bind'])
         else:
-            logger.info('connecting to gossip channel: {}'.format(args['gossip_connect']))
+            logger.info('connecting to gossip group: {}'.format(args['gossip_connect']))
             n.gossip_connect(args['gossip_connect'])
 
     poller = zmq.Poller()
@@ -79,8 +79,8 @@ def task(pipe, arg):
     logger.info('staring node...')
     n.start()
 
-    logger.info('joining: %s' % chan)
-    n.join(chan)
+    logger.info('joining: %s' % group)
+    n.join(group)
 
     pipe_zsock_s.signal(0)  # OK
 
@@ -114,7 +114,7 @@ def task(pipe, arg):
                         n.whisper(address, m)
                     else:
                         msg = message.popstr().decode('utf-8')
-                        n.shouts(chan, msg)
+                        n.shouts(group, msg)
 
             elif ss in items and items[ss] == zmq.POLLIN:
                 e = ZyreEvent(n)
@@ -170,7 +170,7 @@ def main():
     p.add_argument('-l', '--endpoint', help='specify ip listening endpoint [default %(default)s]', default=endpoint)
     p.add_argument('-d', '--debug', help='enable debugging', action='store_true')
 
-    p.add_argument('--channel', default=ZYRE_CHANNEL)
+    p.add_argument('--group', default=ZYRE_GROUP)
 
     args = p.parse_args()
 
@@ -219,7 +219,7 @@ def main():
     loop = ioloop.IOLoop.instance()
 
     client = Client(
-        channel=args.channel,
+        group=args.group,
         loop=loop,
         gossip_bind=args.gossip_bind,
         gossip_connect=args.gossip_connect,

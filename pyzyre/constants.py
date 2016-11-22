@@ -1,6 +1,6 @@
 import os
 
-ZYRE_CHANNEL = os.environ.get('ZYRE_CHANNEL', 'ZYRE')
+ZYRE_GROUP = os.environ.get('ZYRE_GROUP', 'ZYRE')
 SERVICE_PORT = os.environ.get('ZYRE_SERVICE_PORT', '49155')
 
 GOSSIP_PORT = os.environ.get('ZYRE_SERVICE_PORT', '49154')

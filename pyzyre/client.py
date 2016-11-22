@@ -6,10 +6,11 @@ import os.path
 from pyzyre.utils import resolve_gossip, resolve_endpoint
 import names
 from pprint import pprint
-
-from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_CHANNEL, LOG_FORMAT
+from time import sleep
+from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_GROUP, LOG_FORMAT
 
 logger = logging.getLogger(__name__)
+
 
 class Client(object):
 
@@ -26,7 +27,7 @@ class Client(object):
         # disable CZMQ from capturing SIGINT
         os.environ['ZSYS_SIGHANDLER'] = 'false'
 
-        self.channel = kwargs.get('channel', ZYRE_CHANNEL)
+        self.group = kwargs.get('group', ZYRE_GROUP)
         self.interface = kwargs.get('interface') or '*'
 
         self.parent_loop = kwargs.get('loop')
@@ -86,7 +87,7 @@ class Client(object):
                 self.endpoint = resolve_endpoint(SERVICE_PORT, interface=self.interface)
 
         actor_args = [
-            'channel=%s' % self.channel,
+            'group=%s' % self.group,
             'name=%s' % self.name,
         ]
 
@@ -116,6 +117,7 @@ class Client(object):
     def stop_zyre(self):
         self.actor.send_multipart(['$$STOP'])
         m = self.actor.recv_multipart()
+        sleep(0.01)
         self.actor.close()
         del self._actor
 
