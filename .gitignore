@@ -1,3 +1,4 @@
+proxytest.py
 *.tar.gz
 czmq
 zyre
