@@ -114,7 +114,7 @@ def task(pipe, arg):
                         n.whisper(address, m)
                     else:
                         msg = message.popstr().decode('utf-8')
-                        n.shouts(group, msg)
+                        n.shouts(group, msg.encode('utf-8'))
 
             elif ss in items and items[ss] == zmq.POLLIN:
                 e = ZyreEvent(n)
@@ -153,6 +153,8 @@ def task(pipe, arg):
                 else:
                     logger.warn('unknown message type: {}'.format(msg_type))
         except Exception as e:
+            import traceback
+            print traceback.print_exc()
             logger.error(e)
 
     logger.info('shutting down...')

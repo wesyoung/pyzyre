@@ -4,7 +4,7 @@ from argparse import ArgumentParser
 from pyzyre.client import Client
 from pyzyre.chat import task
 import zmq
-from pyzyre.constants import ZYRE_GROUP, LOG_FORMAT, SERVICE_PORT
+from pyzyre.constants import ZYRE_GROUP, LOG_FORMAT, SERVICE_PORT, PYVERSION
 import os
 import select
 import sys
@@ -42,6 +42,10 @@ def main():
         s.connect(args.address)
 
         content = sys.stdin.read().strip('\n')
+
+        if PYVERSION == 2:
+            content = unicode(content, 'utf-8')
+
         logger.info('sending..')
         s.send_multipart([content.encode('utf-8')])
         logger.info('sent...')
@@ -64,7 +68,7 @@ def main():
 
             logger.debug(m)
 
-            zyre.send_message(m[0].encode('utf-8'))
+            zyre.send_message(m[0])
 
         zyre.start_zyre()
 
