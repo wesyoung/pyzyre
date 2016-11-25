@@ -28,6 +28,7 @@ class Client(object):
         os.environ['ZSYS_SIGHANDLER'] = 'false'
 
         self.group = kwargs.get('group', ZYRE_GROUP)
+        self.group = '|'.join(self.group.split(','))
         self.interface = kwargs.get('interface') or '*'
 
         self.parent_loop = kwargs.get('loop')
