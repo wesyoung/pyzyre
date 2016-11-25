@@ -213,7 +213,9 @@ def main():
         elif m_type == 'WHISPER':
             peer, message = m
             logger.info('[WHISPER:{}] {}'.format(peer, message))
-
+        elif m_type == 'SHOUT':
+            group, peer, address, message = m
+            logger.info('[SHOUT:{}][{}]: {}'.format(group, peer, message))
         else:
             logger.warn("unhandled m_type {} rest of message is {}".format(m_type, m))
 
