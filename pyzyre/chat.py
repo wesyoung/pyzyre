@@ -116,7 +116,7 @@ def task(pipe, arg):
                         n.whisper(address, m)
                     else:
                         msg = message.popstr().decode('utf-8')
-                        n.shouts(group, msg.encode('utf-8'))
+                        n.shouts(group[0], msg.encode('utf-8'))
 
             elif ss in items and items[ss] == zmq.POLLIN:
                 e = ZyreEvent(n)
