@@ -39,6 +39,7 @@ def main():
     if select.select([sys.stdin, ], [], [], 0.0)[0]:
         ctx = zmq.Context()
         s = ctx.socket(zmq.PUSH)
+        s.setsockopt(zmq.LINGER, 0)
         s.connect(args.address)
 
         content = sys.stdin.read().strip('\n')
