@@ -79,8 +79,10 @@ def task(pipe, arg):
     logger.info('staring node...')
     n.start()
 
-    logger.info('joining: %s' % group)
-    n.join(group)
+    group = group.split('|')
+    for g in group:
+        logger.info('joining: %s' % g)
+        n.join(g)
 
     pipe_zsock_s.signal(0)  # OK
 
