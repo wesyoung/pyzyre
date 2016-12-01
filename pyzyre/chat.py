@@ -123,6 +123,7 @@ def task(pipe, arg):
 
                 msg_type = e.type().decode('utf-8')
                 logger.debug('found ZyreEvent: %s' % msg_type)
+                #logger.debug(e.get_msg().popstr())
 
                 if msg_type == "ENTER":
                     logger.debug('ENTER {} - {}'.format(e.peer_name(), e.peer_uuid()))
@@ -146,7 +147,8 @@ def task(pipe, arg):
 
                 elif msg_type == 'EXIT':
                     logger.debug('EXIT [{}] [{}]'.format(e.group(), e.peer_name()))
-                    del peers[e.peer_name()]
+                    if e.peer_name() in peers:
+                        del peers[e.peer_name()]
                     pipe_s.send_multipart(['EXIT', str(len(peers))])
 
                 elif msg_type == 'EVASIVE':
@@ -190,6 +192,19 @@ def main():
     logging.getLogger('').addHandler(console)
     logging.propagate = False
 
+    ioloop.install()
+    loop = ioloop.IOLoop.instance()
+
+    client = Client(
+        group=args.group,
+        loop=loop,
+        gossip_bind=args.gossip_bind,
+        gossip_connect=args.gossip_connect,
+        verbose=verbose,
+        interface=args.interface,
+        task=task
+    )
+
     def on_stdin(s, e):
         content = s.readline()
 
@@ -218,33 +233,36 @@ def main():
         elif m_type == 'SHOUT':
             group, peer, address, message = m
             logger.info('[SHOUT:{}][{}]: {}'.format(group, peer, message))
+        elif m_type == 'EXIT':
+            peers_remining = m[0]
+            logger.debug(peers_remining)
+            if args.gossip_connect and peers_remining == '0':
+                loop.remove_handler(client.actor)
+                client.stop_zyre()
+                client.start_zyre()
+                loop.add_handler(client.actor, handle_message, zmq.POLLIN)
         else:
             logger.warn("unhandled m_type {} rest of message is {}".format(m_type, m))
-
-    ioloop.install()
-    loop = ioloop.IOLoop.instance()
-
-    client = Client(
-        group=args.group,
-        loop=loop,
-        gossip_bind=args.gossip_bind,
-        gossip_connect=args.gossip_connect,
-        verbose=verbose,
-        interface=args.interface,
-        task=task
-    )
 
     client.start_zyre()
 
     loop.add_handler(client.actor, handle_message, zmq.POLLIN)
     loop.add_handler(sys.stdin, on_stdin, ioloop.IOLoop.READ)
 
-    try:
-        loop.start()
-    except KeyboardInterrupt:
-        logger.info('SIGINT Received')
-    except Exception as e:
-        logger.error(e)
+    terminated = False
+    while not terminated:
+        try:
+            logger.info('starting loop...')
+            loop.start()
+        except KeyboardInterrupt:
+            logger.info('SIGINT Received')
+
+            terminated = True
+        except Exception as e:
+            terminated = True
+            logger.error(e)
+
+    logger.info('shutting down..')
 
     client.stop_zyre()
 
