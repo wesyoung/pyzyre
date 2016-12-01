@@ -85,7 +85,10 @@ class Client(object):
                     self.gossip_connect = None
 
             if not self.endpoint:
-                self.endpoint = resolve_endpoint(SERVICE_PORT, interface=self.interface)
+                if self.interface:
+                    self.endpoint = resolve_endpoint(SERVICE_PORT, interface=self.interface)
+                else:
+                    raise RuntimeError('A local interface must be specified')
 
         actor_args = [
             'group=%s' % self.group,
