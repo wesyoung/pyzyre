@@ -2,11 +2,12 @@ proxytest.py
 *.tar.gz
 czmq
 zyre
+!buildutils/
 *.sh
 # Byte-compiled / optimized / DLL files
 bundled/*
 .vagrant
-Vagrantfile*
+Vagrantfile\.*
 .idea
 __pycache__/
 *.py[cod]

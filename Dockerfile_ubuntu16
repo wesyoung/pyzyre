@@ -1,0 +1,25 @@
+FROM ubuntu:16.04
+
+RUN apt-get update && apt-get install -y python python-dev build-essential libuuid1 uuid-dev python-pip \
+libtool autotools-dev autoconf automake pkg-config cmake uuid-dev cython
+
+RUN pip install pip --upgrade
+RUN pip install -U wheel setuptools cython
+
+COPY . /build
+
+WORKDIR /build
+
+# cleanup from the copy [todo- finish setup.py clean -a]
+RUN rm -rf bundled/* build/* czmq zyre dist/*
+RUN rm -rf `find . | grep pycache`
+RUN rm -rf `find . | fgrep .pyc`
+
+# build and install
+RUN pip install -r dev_requirements.txt
+RUN python setup.py build_ext bdist_wheel
+RUN pip install dist/*.whl
+
+# tests get confused if these are in the local directory given how we generate the bindings and run the tests
+RUN rm -rf zyre czmq
+RUN python setup.py test

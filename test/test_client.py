@@ -3,6 +3,7 @@ import pytest
 from zmq.eventloop import ioloop
 from pyzyre.client import Client
 from pyzyre.chat import task
+import netifaces as ni
 
 from time import sleep
 from pprint import pprint
@@ -16,7 +17,10 @@ def iface():
     if sys.platform == 'darwin':
         return 'en0'
     else:
-        return 'eth0'
+        if 'eth0' in ni.interfaces():
+            return 'eth0'
+        else:
+            return ni.interfaces()[1]
 
 
 def _handle_message(s, e):
