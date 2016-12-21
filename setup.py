@@ -141,7 +141,7 @@ setup(
     url='https://github.com/wesyoung/pyzyre',
     description="",
     long_description="",
-    license="LGPLV3",
+    license="MPL2",
     cmdclass=cmdclass,
     install_requires=[
         'netifaces',
@@ -154,7 +154,7 @@ setup(
     ],
     classifiers=[
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)',
+        'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)'
     ],
     entry_points={
         'console_scripts': [
