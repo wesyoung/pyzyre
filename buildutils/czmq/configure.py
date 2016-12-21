@@ -69,7 +69,6 @@ class Configure(build_ext):
 
     def initialize_options(self):
         build_ext.initialize_options(self)
-        self.zmq = None
         self.build_base = 'build'
 
     # DON'T REMOVE: distutils demands these be here even if they do nothing.

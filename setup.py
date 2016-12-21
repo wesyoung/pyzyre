@@ -13,7 +13,7 @@ from buildutils.zyre.configure import Configure as ConfigureZyre
 from ctypes import *
 from buildutils.czmq.msg import fatal
 from subprocess import Popen, PIPE
-
+from setuptools.dist import Distribution
 from pprint import pprint
 
 import versioneer
@@ -71,8 +71,6 @@ pypy = 'PyPy' in sys.version
 # set dylib ext:
 if sys.platform.startswith('win'):
     lib_ext = '.dll'
-elif sys.platform == 'darwin':
-    lib_ext = '.dylib'
 else:
     lib_ext = '.so'
 
@@ -138,6 +136,11 @@ class zbuild_ext(build_ext_c):
         return r
 
 
+class BinaryDistribution(Distribution):
+    """Distribution which always forces a binary package with platform name"""
+    def has_ext_modules(foo):
+        return True
+
 class BuildPyCommand(setuptools.command.build_py.build_py):
   """Custom build command."""
 
@@ -154,7 +157,7 @@ cmdclass = {
     'build_py': BuildPyCommand,
 }
 
-packages = ['pyzyre', 'czmq', 'zyre']
+packages = ['czmq', 'zyre', 'pyzyre']
 
 package_data = {
     'zyre': ['*' + lib_ext]
@@ -176,6 +179,7 @@ setup(
     long_description="",
     license="MPL2",
     cmdclass=cmdclass,
+    distclass=BinaryDistribution,
     install_requires=[
         'netifaces',
         'netaddr',
