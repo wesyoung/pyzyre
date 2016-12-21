@@ -139,7 +139,8 @@ class zbuild_ext(build_ext_c):
 class BinaryDistribution(Distribution):
     """Distribution which always forces a binary package with platform name"""
     def has_ext_modules(foo):
-        return True
+        if sys.platform == 'darwin':
+            return True
 
 class BuildPyCommand(setuptools.command.build_py.build_py):
   """Custom build command."""
