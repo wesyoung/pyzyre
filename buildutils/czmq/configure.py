@@ -5,6 +5,7 @@ import shutil
 from glob import glob
 from os.path import basename, join as pjoin
 from subprocess import Popen, PIPE
+import stat
 
 from .msg import *
 from .fetch import fetch_libczmq
@@ -148,6 +149,12 @@ class Configure(build_ext):
             # http://stackoverflow.com/a/19147134
             runtime_library_dirs=['.', 'czmq'],
         )
+
+        # http://stackoverflow.com/a/32765319/7205341
+        if sys.platform == 'darwin':
+            from distutils import sysconfig
+            vars = sysconfig.get_config_vars()
+            vars['LDSHARED'] = vars['LDSHARED'].replace('-bundle', '-dynamiclib')
 
         # register the extension:
         self.distribution.ext_modules.insert(1, libczmq)

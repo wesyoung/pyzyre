@@ -11,6 +11,8 @@ from buildutils.zmq.configure import Configure as ConfigureZmq
 from buildutils.czmq.configure import Configure as ConfigureCzmq
 from buildutils.zyre.configure import Configure as ConfigureZyre
 from ctypes import *
+from buildutils.czmq.msg import fatal
+from subprocess import Popen, PIPE
 
 from pprint import pprint
 
@@ -102,7 +104,38 @@ class zbuild_ext(build_ext_c):
         self.distribution.run_command('configure_czmq')
         self.distribution.run_command('configure')
 
-        return build_ext_c.run(self)
+        r = build_ext_c.run(self)
+
+        if sys.platform != 'darwin':
+            return r
+
+        cmds = []
+        cmds.append(
+            ['install_name_tool', '-change', 'build/lib/czmq/libzmq.so', 'czmq/libzmq.so',
+             'build/lib/czmq/libczmq.so']
+        )
+        cmds.append(
+            ['install_name_tool', '-change', 'build/lib/czmq/libzmq.so', 'czmq/libzmq.so',
+             'build/lib/zyre/libzyre.so']
+        )
+
+        cmds.append(
+            ['install_name_tool', '-change', 'build/lib/czmq/libczmq.so', 'czmq/libczmq.so',
+             'build/lib/zyre/libzyre.so']
+        )
+
+        for c in cmds:
+            try:
+                p = Popen(c, stdout=PIPE, stderr=PIPE)
+
+            except OSError:
+                fatal("install_name_tool not found, cannot patch libzmq for bundling.")
+
+            out, err = p.communicate()
+            if p.returncode:
+                fatal("Could not patch bundled libzmq install_name: %s" % err, p.returncode)
+
+        return r
 
 
 class BuildPyCommand(setuptools.command.build_py.build_py):
