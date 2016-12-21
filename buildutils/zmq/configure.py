@@ -189,6 +189,12 @@ class Configure(build_ext):
             include_dirs=includes,
         )
 
+        # http://stackoverflow.com/a/32765319/7205341
+        if sys.platform == 'darwin':
+            from distutils import sysconfig
+            vars = sysconfig.get_config_vars()
+            vars['LDSHARED'] = vars['LDSHARED'].replace('-bundle', '-dynamiclib')
+
         # register the extension:
         self.distribution.ext_modules.insert(0, libzmq)
 
