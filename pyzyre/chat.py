@@ -114,6 +114,10 @@ def task(pipe, arg):
                         address = peers[str(address)]
                         address = uuid.UUID(address).hex.upper()
                         n.whisper(address, m)
+                    elif msg_type == 'join':
+                        group = message.popstr().decode('utf-8')
+                        logger.debug('joining %s' % group)
+                        n.join(group)
                     else:
                         msg = message.popstr().decode('utf-8')
                         n.shouts(group[0], msg.encode('utf-8'))

@@ -125,6 +125,10 @@ class Client(object):
         self.actor.close()
         del self._actor
 
+    def join(self, group):
+        logger.debug('sending join')
+        self.actor.send_multipart(['join', group.encode('utf-8')])
+
     def send_message(self, message, address=None):
         if isinstance(message, str) and PYVERSION == 2:
             message = unicode(message, 'utf-8')
