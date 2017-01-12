@@ -161,9 +161,7 @@ def task(pipe, arg):
                 else:
                     logger.warn('unknown message type: {}'.format(msg_type))
         except Exception as e:
-            import traceback
-            print traceback.print_exc()
-            logger.error(e)
+            logger.exception("Unhandled exception in main io loop")
 
     logger.info('shutting down...')
     n.stop()
