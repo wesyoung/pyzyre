@@ -1,3 +1,4 @@
+from argparse import ArgumentParser
 import zmq
 import logging
 from czmq import Zactor, zactor_fn, create_string_buffer
@@ -6,7 +7,7 @@ import os.path
 from pyzyre.utils import resolve_gossip, resolve_endpoint
 import names
 from pprint import pprint
-from ._client_task import task
+from ._client_task import task as client_task
 import sys
 from zmq.eventloop import ioloop
 from time import sleep
@@ -14,6 +15,17 @@ from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_GROUP, LOG_FORMAT, 
 
 logger = logging.getLogger(__name__)
 
+class DefaultHandler(object):
+    def on_shout(self, group, peer, address, message):
+        pass
+    def on_whisper(self, peer, message):
+        pass
+    def on_enter(self, peer):
+        pass
+    def on_join(self, peer, group):
+        pass
+    def on_exit(self, peer):
+        pass
 
 class Client(object):
 
@@ -25,24 +37,25 @@ class Client(object):
             self.stop_zyre()
         return self
 
-    def __init__(self, task=None, **kwargs):
+    def __init__(self, handler=DefaultHandler(), **kwargs):
 
         # disable CZMQ from capturing SIGINT
         os.environ['ZSYS_SIGHANDLER'] = 'false'
+
+        self.handler = handler
 
         self.group = kwargs.get('group', ZYRE_GROUP)
         self.group = '|'.join(self.group.split(','))
         self.interface = kwargs.get('interface') or '*'
 
         self.parent_loop = kwargs.get('loop')
-
         self.gossip_bind = kwargs.get('gossip_bind')
         self.beacon = kwargs.get('beacon')
         self.gossip_connect = kwargs.get('gossip_connect')
         self.endpoint = kwargs.get('endpoint')
         self.name = kwargs.get('name', names.get_full_name())
         self.actor = None
-        self.task = zactor_fn(task)
+        self.task = zactor_fn(client_task)
         self.verbose = kwargs.get('verbose')
 
         if self.gossip_bind:
@@ -144,6 +157,33 @@ class Client(object):
             self.actor.send_multipart(['shout', message.encode('utf-8')])
             #logger.debug('message sent via shout: {}'.format(message))
 
+    def handle_message(self, s, e):
+        m = s.recv_multipart()
+
+        m_type = m.pop(0)
+
+        if m_type == 'SHOUT':
+            group, peer, address, message = m
+            self.handler.on_shout(group, peer, address, message)
+        elif m_type == 'ENTER':
+            self.handler.on_enter(peer=m)
+        elif m_type == 'WHISPER':
+            peer, message = m
+            self.handler.on_whisper(peer, message)
+        elif m_type == 'EXIT':
+            peer, peers_remining = m
+            logger.debug(peers_remining)
+            if self.gossip_connect and peers_remining == '0':
+                self.parent_loop.remove_handler(self.actor)
+                self.stop_zyre()
+                self.start_zyre()
+                self.parent_loop.add_handler(self.actor, self.handle_message, zmq.POLLIN)
+            self.handler.on_exit(peer)
+        elif m_type == 'JOIN':
+            peer, group = m
+            self.handler.on_join(peer, group)
+        else:
+            logger.warn("unhandled m_type {} rest of message is {}".format(m_type, m))
 
 
 def main():
@@ -178,16 +218,14 @@ def main():
 
     client = Client(
         group=args.group,
-        loop=loop,
         gossip_bind=args.gossip_bind,
         gossip_connect=args.gossip_connect,
         verbose=verbose,
         interface=args.interface,
-        task=task
     )
 
     def on_stdin(s, e):
-        content = s.readline()
+        content = s.readline().rstrip()
 
         if content.startswith('CLIENT:'):
             address, message = content.split(' - ')
@@ -196,38 +234,10 @@ def main():
         else:
             client.send_message(content.encode('utf-8'))
 
-    def handle_message(s, e):
-        m = s.recv_multipart()
-
-        logger.debug(m)
-
-        m_type = m.pop(0)
-
-        logger.info(m_type)
-
-        if m_type == 'ENTER':
-            logger.info("ENTER {}".format(m))
-
-        elif m_type == 'WHISPER':
-            peer, message = m
-            logger.info('[WHISPER:{}] {}'.format(peer, message))
-        elif m_type == 'SHOUT':
-            group, peer, address, message = m
-            logger.info('[SHOUT:{}][{}]: {}'.format(group, peer, message))
-        elif m_type == 'EXIT':
-            peers_remining = m[0]
-            logger.debug(peers_remining)
-            if args.gossip_connect and peers_remining == '0':
-                loop.remove_handler(client.actor)
-                client.stop_zyre()
-                client.start_zyre()
-                loop.add_handler(client.actor, handle_message, zmq.POLLIN)
-        else:
-            logger.warn("unhandled m_type {} rest of message is {}".format(m_type, m))
 
     client.start_zyre()
 
-    loop.add_handler(client.actor, handle_message, zmq.POLLIN)
+    loop.add_handler(client.actor, client.handle_message, zmq.POLLIN)
     loop.add_handler(sys.stdin, on_stdin, ioloop.IOLoop.READ)
 
     terminated = False

@@ -122,7 +122,7 @@ def task(pipe, arg):
                 e = ZyreEvent(n)
 
                 msg_type = e.type().decode('utf-8')
-                logger.debug('found ZyreEvent: %s' % msg_type)
+                #logger.debug('found ZyreEvent: %s' % msg_type)
                 #logger.debug(e.get_msg().popstr())
 
                 if msg_type == "ENTER":
@@ -149,7 +149,7 @@ def task(pipe, arg):
                     logger.debug('EXIT [{}] [{}]'.format(e.group(), e.peer_name()))
                     if e.peer_name() in peers:
                         del peers[e.peer_name()]
-                    pipe_s.send_multipart(['EXIT', str(len(peers))])
+                    pipe_s.send_multipart(['EXIT', e.peer_name(), str(len(peers))])
 
                 elif msg_type == 'EVASIVE':
                     logger.debug('EVASIVE {}'.format(e.peer_name()))
