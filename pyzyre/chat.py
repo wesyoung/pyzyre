@@ -105,22 +105,23 @@ def task(pipe, arg):
                     terminated = True
                 elif msg_type == '$$ID':
                     pipe_s.send_string(n.uuid().decode('utf-8'))
+                elif msg_type == 'whisper':
+                    address = message.popstr().decode('utf-8')
+                    msg = message.popstr().decode('utf-8')
+                    m = Zmsg()
+                    m.addstr(msg)
+                    address = peers[str(address)]
+                    address = uuid.UUID(address).hex.upper()
+                    n.whisper(address, m)
+                elif msg_type == 'join':
+                    group = message.popstr().decode('utf-8')
+                    logger.debug('joining %s' % group)
+                    n.join(group)
+                elif msg_type == 'shout':
+                    msg = message.popstr().decode('utf-8')
+                    n.shouts(group[0], msg.encode('utf-8'))
                 else:
-                    if msg_type == 'whisper':
-                        address = message.popstr().decode('utf-8')
-                        msg = message.popstr().decode('utf-8')
-                        m = Zmsg()
-                        m.addstr(msg)
-                        address = peers[str(address)]
-                        address = uuid.UUID(address).hex.upper()
-                        n.whisper(address, m)
-                    elif msg_type == 'join':
-                        group = message.popstr().decode('utf-8')
-                        logger.debug('joining %s' % group)
-                        n.join(group)
-                    else:
-                        msg = message.popstr().decode('utf-8')
-                        n.shouts(group[0], msg.encode('utf-8'))
+                    logger.warn('unknown message type: {}'.format(msg_type))
 
             elif ss in items and items[ss] == zmq.POLLIN:
                 e = ZyreEvent(n)
