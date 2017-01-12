@@ -16,15 +16,15 @@ from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_GROUP, LOG_FORMAT, 
 logger = logging.getLogger(__name__)
 
 class DefaultHandler(object):
-    def on_shout(self, group, peer, address, message):
+    def on_shout(self, client, group, peer, address, message):
         pass
-    def on_whisper(self, peer, message):
+    def on_whisper(self, client, peer, message):
         pass
-    def on_enter(self, peer):
+    def on_enter(self, client, peer):
         pass
-    def on_join(self, peer, group):
+    def on_join(self, client, peer, group):
         pass
-    def on_exit(self, peer):
+    def on_exit(self, client, peer):
         pass
 
 class Client(object):
@@ -145,6 +145,9 @@ class Client(object):
         logger.debug('sending join')
         self.actor.send_multipart(['join', group.encode('utf-8')])
 
+    def shout(self, group, message):
+        self.actor.send_multipart(['shout', group, message.encode('utf-8')])
+
     def send_message(self, message, address=None):
         if isinstance(message, str) and PYVERSION == 2:
             message = unicode(message, 'utf-8')
@@ -164,12 +167,12 @@ class Client(object):
 
         if m_type == 'SHOUT':
             group, peer, address, message = m
-            self.handler.on_shout(group, peer, address, message)
+            self.handler.on_shout(self, group, peer, address, message)
         elif m_type == 'ENTER':
-            self.handler.on_enter(peer=m)
+            self.handler.on_enter(self, peer=m)
         elif m_type == 'WHISPER':
             peer, message = m
-            self.handler.on_whisper(peer, message)
+            self.handler.on_whisper(self, peer, message)
         elif m_type == 'EXIT':
             peer, peers_remining = m
             logger.debug(peers_remining)
@@ -178,10 +181,10 @@ class Client(object):
                 self.stop_zyre()
                 self.start_zyre()
                 self.parent_loop.add_handler(self.actor, self.handle_message, zmq.POLLIN)
-            self.handler.on_exit(peer)
+            self.handler.on_exit(self, peer)
         elif m_type == 'JOIN':
             peer, group = m
-            self.handler.on_join(peer, group)
+            self.handler.on_join(self, peer, group)
         else:
             logger.warn("unhandled m_type {} rest of message is {}".format(m_type, m))
 
@@ -233,7 +236,7 @@ def main():
             address = address.split(':')[1]
             client.send_message(message, address=address)
         else:
-            client.send_message(content.encode('utf-8'))
+            client.shout(args.group, content.encode('utf-8'))
 
 
     client.start_zyre()

@@ -113,8 +113,9 @@ def task(pipe, arg):
                     logger.debug('joining %s' % group)
                     n.join(group)
                 elif msg_type == 'shout':
+                    g = message.popstr()
                     msg = message.popstr().decode('utf-8')
-                    n.shouts(group[0], msg.encode('utf-8'))
+                    n.shouts(g, msg.encode('utf-8'))
                 else:
                     logger.warn('unknown message type: {}'.format(msg_type))
 
