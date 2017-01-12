@@ -218,6 +218,7 @@ def main():
 
     client = Client(
         group=args.group,
+        loop=loop,
         gossip_bind=args.gossip_bind,
         gossip_connect=args.gossip_connect,
         verbose=verbose,
