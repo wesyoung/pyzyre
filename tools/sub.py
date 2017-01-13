@@ -15,6 +15,5 @@ control.connect("tcp://localhost:%s" % 5002)
 control.send_multipart(["SUB", topicfilter]) #needs to be done periodically
 
 while True:
-    msg = socket.recv()
-    topic, messagedata = msg.split(None, 1)
+    topic, messagedata = socket.recv_multipart()
     print topic, messagedata

@@ -13,7 +13,7 @@ class GatewayHandler(DefaultHandler):
         self.pub = pub
 
     def on_shout(self, client, group, peer, address, message):
-        self.pub.send("{} {}".format(group, message))
+        self.pub.send_multipart([group, message])
 
 def main():
     p = ArgumentParser()
