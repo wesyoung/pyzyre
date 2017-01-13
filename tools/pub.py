@@ -11,4 +11,6 @@ control.send_multipart(["SUB", topic])
 
 while True:
     msg = sys.stdin.readline().rstrip()
+    if not msg:
+        break
     control.send_multipart(["PUB", topic, msg])
