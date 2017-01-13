@@ -71,7 +71,7 @@ def main():
         args = req[1:]
         if cmd == 'PUB':
             client.shout(*args)
-            pub.send("{} {}".format(*args)) #and send to other local clients
+            pub.send_multipart(args)
         elif cmd == 'SUB':
             client.join(*args)
 
