@@ -69,7 +69,6 @@ def main():
         req = pull.recv_multipart()
         cmd = req[0]
         args = req[1:]
-        print cmd, args
         if cmd == 'PUB':
             client.shout(*args)
             pub.send("{} {}".format(*args)) #and send to other local clients
