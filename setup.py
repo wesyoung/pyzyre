@@ -196,7 +196,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'zyre-chat=pyzyre.chat:main',
+            'zyre-chat=pyzyre.client:main',
             'zyre-proxy=pyzyre.proxy:main'
         ]
     }
