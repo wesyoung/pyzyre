@@ -15,17 +15,23 @@ from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_GROUP, LOG_FORMAT, 
 
 logger = logging.getLogger(__name__)
 
+
 class DefaultHandler(object):
     def on_shout(self, client, group, peer, address, message):
         pass
+
     def on_whisper(self, client, peer, message):
         pass
+
     def on_enter(self, client, peer):
         pass
+
     def on_join(self, client, peer, group):
         pass
+
     def on_exit(self, client, peer):
         pass
+
 
 class Client(object):
 

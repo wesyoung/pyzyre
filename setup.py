@@ -198,6 +198,7 @@ setup(
         'console_scripts': [
             'zyre-chat=pyzyre.client:main',
             'zyre-proxy=pyzyre.proxy:main'
+            'zyre-gateway=pyzyre.gateway:main'
         ]
     }
 )

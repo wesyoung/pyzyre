@@ -1,12 +1,14 @@
 from argparse import ArgumentParser
 import zmq
 import logging
-from pyzyre.utils import resolve_gossip, resolve_endpoint
+from pyzyre.utils import resolve_endpoint
 from zmq.eventloop import ioloop
-from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_GROUP, LOG_FORMAT, PYVERSION
+from pyzyre.constants import SERVICE_PORT, ZYRE_GROUP, LOG_FORMAT
+from pyzyre.client import Client, DefaultHandler
+
 
 logger = logging.getLogger(__name__)
-from pyzyre.client import Client, DefaultHandler
+
 
 class GatewayHandler(DefaultHandler):
     def __init__(self, pub):
@@ -15,6 +17,8 @@ class GatewayHandler(DefaultHandler):
     def on_shout(self, client, group, peer, address, message):
         self.pub.send_multipart([group, message])
 
+
+# see examples/pub.py and sub.py
 def main():
     p = ArgumentParser()
 
