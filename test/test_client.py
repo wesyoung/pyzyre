@@ -2,7 +2,7 @@ import sys
 import pytest
 from zmq.eventloop import ioloop
 from pyzyre.client import Client
-from pyzyre.chat import task
+from pyzyre._client_task import task
 import netifaces as ni
 
 from time import sleep
