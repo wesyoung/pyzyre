@@ -100,28 +100,30 @@ def task(pipe, arg):
                     terminated = True
                 elif msg_type == '$$ID':
                     pipe_s.send_string(n.uuid().decode('utf-8'))
+                elif msg_type == 'whisper':
+                    address = message.popstr().decode('utf-8')
+                    msg = message.popstr().decode('utf-8')
+                    m = Zmsg()
+                    m.addstr(msg)
+                    address = peers[str(address)]
+                    address = uuid.UUID(address).hex.upper()
+                    n.whisper(address, m)
+                elif msg_type == 'join':
+                    group = message.popstr().decode('utf-8')
+                    logger.debug('joining %s' % group)
+                    n.join(group)
+                elif msg_type == 'shout':
+                    g = message.popstr()
+                    msg = message.popstr().decode('utf-8')
+                    n.shouts(g, msg.encode('utf-8'))
                 else:
-                    if msg_type == 'whisper':
-                        address = message.popstr().decode('utf-8')
-                        msg = message.popstr().decode('utf-8')
-                        m = Zmsg()
-                        m.addstr(msg)
-                        address = peers[str(address)]
-                        address = uuid.UUID(address).hex.upper()
-                        n.whisper(address, m)
-                    elif msg_type == 'join':
-                        group = message.popstr().decode('utf-8')
-                        logger.debug('joining %s' % group)
-                        n.join(group)
-                    else:
-                        msg = message.popstr().decode('utf-8')
-                        n.shouts(group[0], msg.encode('utf-8'))
+                    logger.warn('unknown message type: {}'.format(msg_type))
 
             elif ss in items and items[ss] == zmq.POLLIN:
                 e = ZyreEvent(n)
 
                 msg_type = e.type().decode('utf-8')
-                logger.debug('found ZyreEvent: %s' % msg_type)
+                #logger.debug('found ZyreEvent: %s' % msg_type)
                 #logger.debug(e.get_msg().popstr())
 
                 if msg_type == "ENTER":
@@ -148,7 +150,7 @@ def task(pipe, arg):
                     logger.debug('EXIT [{}] [{}]'.format(e.group(), e.peer_name()))
                     if e.peer_name() in peers:
                         del peers[e.peer_name()]
-                    pipe_s.send_multipart(['EXIT', str(len(peers))])
+                    pipe_s.send_multipart(['EXIT', e.peer_name(), str(len(peers))])
 
                 elif msg_type == 'EVASIVE':
                     logger.debug('EVASIVE {}'.format(e.peer_name()))
@@ -156,9 +158,7 @@ def task(pipe, arg):
                 else:
                     logger.warn('unknown message type: {}'.format(msg_type))
         except Exception as e:
-            import traceback
-            print traceback.print_exc()
-            logger.error(e)
+            logger.exception("Unhandled exception in main io loop")
 
     logger.info('shutting down...')
     n.stop()

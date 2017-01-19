@@ -23,12 +23,6 @@ def iface():
             return ni.interfaces()[1]
 
 
-def _handle_message(s, e):
-    m = s.recv_multipart()
-    assert m
-    print(m)
-
-
 def test_client_beacon(iface):
     # test with multi-process framework..
     c1 = Client(task=task, verbose='1')
@@ -40,10 +34,10 @@ def test_client_beacon(iface):
     sleep(0.01)
 
     loop = ioloop.IOLoop.instance()
-    loop.add_handler(c1.actor, _handle_message, zmq.POLLIN)
+    loop.add_handler(c1.actor, c1.handle_message, zmq.POLLIN)
 
     def test_fcn():
-        c2.send_message('TEST')
+        c2.shout('ZYRE', 'TEST')
         sleep(2)
 
     loop.run_sync(test_fcn)
@@ -63,10 +57,10 @@ def test_client_gossip(iface):
     sleep(0.01)
 
     loop = ioloop.IOLoop.instance()
-    loop.add_handler(c1.actor, _handle_message, zmq.POLLIN)
+    loop.add_handler(c1.actor, c1.handle_message, zmq.POLLIN)
 
     def test_fcn():
-        c2.send_message('TEST')
+        c2.shout('ZYRE', 'TEST')
         sleep(2)
 
     loop.run_sync(test_fcn)
