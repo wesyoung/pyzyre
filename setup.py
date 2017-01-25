@@ -176,7 +176,7 @@ setup(
     author="Wes Young",
     author_email="wes@barely3am.com",
     url='https://github.com/wesyoung/pyzyre',
-    description="",
+    description="higher level bundled pythonic bindings for Zyre",
     long_description="",
     license="MPL2",
     cmdclass=cmdclass,
