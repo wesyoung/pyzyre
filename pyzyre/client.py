@@ -51,6 +51,7 @@ class Client(object):
         self.handler = handler
 
         self.group = kwargs.get('group', ZYRE_GROUP)
+        self._groups = self.group.split(',')
         self.group = '|'.join(self.group.split(','))
         self.interface = kwargs.get('interface') or '*'
 
@@ -141,7 +142,7 @@ class Client(object):
         self.actor = zmq.Socket(shadow=self._actor.resolve(self._actor).value)
 
     def stop_zyre(self):
-        self.actor.send_multipart(['$$STOP'])
+        self.actor.send_multipart(['$$STOP'.encode('utf-8')])
         m = self.actor.recv_multipart()
         sleep(0.01)
         self.actor.close()
@@ -149,22 +150,29 @@ class Client(object):
 
     def join(self, group):
         logger.debug('sending join')
-        self.actor.send_multipart(['join', group.encode('utf-8')])
+        self.actor.send_multipart(['JOIN', group.encode('utf-8')])
 
     def shout(self, group, message):
-        self.actor.send_multipart(['shout', group, message.encode('utf-8')])
+        self.actor.send_multipart(['SHOUT', group.encode('utf-8'), message.encode('utf-8')])
 
-    def send_message(self, message, address=None):
+    def whisper(self, message, address):
+        logger.debug('sending whisper to %s' % address)
+        self.actor.send_multipart(['WHISPER', address, message.encode('utf-8')])
+        logger.debug('message sent via whisper')
+
+    # deprecate
+    def send_message(self, message, group=None, address=None):
         if isinstance(message, str) and PYVERSION == 2:
             message = unicode(message, 'utf-8')
 
         if address:
             logger.debug('sending whisper to %s' % address)
-            self.actor.send_multipart(['whisper', address, message.encode('utf-8')])
+            self.actor.send_multipart(['WHISPER', address, message.encode('utf-8')])
             logger.debug('message sent via whisper')
         else:
-            self.actor.send_multipart(['shout', message.encode('utf-8')])
-            #logger.debug('message sent via shout: {}'.format(message))
+            if not group:
+                group = self._groups[0]
+            self.actor.send_multipart(['SHOUT', group.encode('utf-8'), message.encode('utf-8')])
 
     def handle_message(self, s, e):
         m = s.recv_multipart()
@@ -174,11 +182,14 @@ class Client(object):
         if m_type == 'SHOUT':
             group, peer, address, message = m
             self.handler.on_shout(self, group, peer, address, message)
+
         elif m_type == 'ENTER':
             self.handler.on_enter(self, peer=m)
+
         elif m_type == 'WHISPER':
             peer, message = m
             self.handler.on_whisper(self, peer, message)
+
         elif m_type == 'EXIT':
             peer, peers_remining = m
             logger.debug(peers_remining)
@@ -188,6 +199,7 @@ class Client(object):
                 self.start_zyre()
                 self.parent_loop.add_handler(self.actor, self.handle_message, zmq.POLLIN)
             self.handler.on_exit(self, peer)
+
         elif m_type == 'JOIN':
             peer, group = m
             self.handler.on_join(self, peer, group)
@@ -240,28 +252,19 @@ def main():
         if content.startswith('CLIENT:'):
             address, message = content.split(' - ')
             address = address.split(':')[1]
-            client.send_message(message, address=address)
+            client.whisper(message, address)
         else:
             client.shout(args.group, content.encode('utf-8'))
-
 
     client.start_zyre()
 
     loop.add_handler(client.actor, client.handle_message, zmq.POLLIN)
     loop.add_handler(sys.stdin, on_stdin, ioloop.IOLoop.READ)
 
-    terminated = False
-    while not terminated:
-        try:
-            logger.info('starting loop...')
-            loop.start()
-        except KeyboardInterrupt:
-            logger.info('SIGINT Received')
-
-            terminated = True
-        except Exception as e:
-            terminated = True
-            logger.error(e)
+    try:
+        loop.start()
+    except KeyboardInterrupt:
+        logger.info('SIGINT Received')
 
     logger.info('shutting down..')
 
