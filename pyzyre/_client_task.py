@@ -98,8 +98,10 @@ def task(pipe, arg):
                 # message to quit
                 if msg_type == "$$STOP":
                     terminated = True
+
                 elif msg_type == '$$ID':
                     pipe_s.send_string(n.uuid().decode('utf-8'))
+
                 elif msg_type == 'whisper':
                     address = message.popstr().decode('utf-8')
                     msg = message.popstr().decode('utf-8')
@@ -108,14 +110,17 @@ def task(pipe, arg):
                     address = peers[str(address)]
                     address = uuid.UUID(address).hex.upper()
                     n.whisper(address, m)
+
                 elif msg_type == 'join':
                     group = message.popstr().decode('utf-8')
                     logger.debug('joining %s' % group)
                     n.join(group)
+
                 elif msg_type == 'shout':
                     g = message.popstr()
                     msg = message.popstr().decode('utf-8')
-                    n.shouts(g, msg.encode('utf-8'))
+                    n.shout(g, msg.encode('utf-8'))
+
                 else:
                     logger.warn('unknown message type: {}'.format(msg_type))
 
