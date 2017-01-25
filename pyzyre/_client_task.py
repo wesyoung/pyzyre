@@ -93,7 +93,7 @@ def task(pipe, arg):
                 if not message:
                     break  # SIGINT
 
-                msg_type = message.popstr().decode('utf-8')
+                msg_type = message.popstr().decode('utf-8').upper()
 
                 # message to quit
                 if msg_type == "$$STOP":
@@ -102,7 +102,7 @@ def task(pipe, arg):
                 elif msg_type == '$$ID':
                     pipe_s.send_string(n.uuid().decode('utf-8'))
 
-                elif msg_type == 'whisper':
+                elif msg_type == 'WHISPER':
                     address = message.popstr().decode('utf-8')
                     msg = message.popstr().decode('utf-8')
                     m = Zmsg()
@@ -111,15 +111,15 @@ def task(pipe, arg):
                     address = uuid.UUID(address).hex.upper()
                     n.whisper(address, m)
 
-                elif msg_type == 'join':
+                elif msg_type == 'JOIN':
                     group = message.popstr().decode('utf-8')
                     logger.debug('joining %s' % group)
                     n.join(group)
 
-                elif msg_type == 'shout':
+                elif msg_type == 'SHOUT':
                     g = message.popstr()
-                    msg = message.popstr().decode('utf-8')
-                    n.shout(g, msg.encode('utf-8'))
+                    msg = message.popstr()
+                    n.shouts(g, "%s", msg)
 
                 else:
                     logger.warn('unknown message type: {}'.format(msg_type))
@@ -127,7 +127,7 @@ def task(pipe, arg):
             elif ss in items and items[ss] == zmq.POLLIN:
                 e = ZyreEvent(n)
 
-                msg_type = e.type().decode('utf-8')
+                msg_type = e.type().decode('utf-8').upper()
                 #logger.debug('found ZyreEvent: %s' % msg_type)
                 #logger.debug(e.get_msg().popstr())
 
@@ -165,5 +165,5 @@ def task(pipe, arg):
         except Exception as e:
             logger.exception("Unhandled exception in main io loop")
 
-    logger.info('shutting down...')
+    logger.info('shutting down node')
     n.stop()

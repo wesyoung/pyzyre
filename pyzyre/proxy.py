@@ -2,7 +2,7 @@ import logging
 from zmq.eventloop import ioloop
 from argparse import ArgumentParser
 from pyzyre.client import Client
-from pyzyre.chat import task
+from pyzyre._client_task import task
 import zmq
 from pyzyre.constants import ZYRE_GROUP, LOG_FORMAT, SERVICE_PORT, PYVERSION
 import os
@@ -69,7 +69,7 @@ def main():
 
             logger.debug(m)
 
-            zyre.send_message(m[0])
+            zyre.shout(args.group, m[0])
 
         zyre.start_zyre()
 
