@@ -2,7 +2,7 @@
 # vi: set ft=ruby :
 
 $script = <<SCRIPT
-echo "alias aptitude='aptitude -F \"%c %p %d %V\"'" >> /home/ubuntu/.bashrc
+#echo "alias aptitude='aptitude -F \"%c %p %d %V\"'" >> /home/ubuntu/.bashrc
 
 wget -nv http://download.opensuse.org/repositories/network:messaging:zeromq:git-draft/xUbuntu_16.04/Release.key -O Release.key
 apt-key add - < Release.key

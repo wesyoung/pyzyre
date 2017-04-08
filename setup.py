@@ -7,6 +7,7 @@ import sys
 from distutils.version import LooseVersion
 from setuptools import setup
 import setuptools.command.build_py
+from setuptools.command.develop import develop
 from buildutils.zmq.configure import Configure as ConfigureZmq
 from buildutils.czmq.configure import Configure as ConfigureCzmq, ConfigureSDist as ConfigureCzmqSdist
 from buildutils.zyre.configure import Configure as ConfigureZyre, ConfigureSDist as ConfigureZyreSdist
@@ -176,6 +177,12 @@ class BuildPyCommand(setuptools.command.build_py.build_py):
 
     setuptools.command.build_py.build_py.run(self)
 
+
+class DevelopCommand(develop):
+    def run(self):
+        self.run_command('sdist')
+        develop.run(self)
+
 cmdclass = versioneer.get_cmdclass()
 cmdclass = {
     'configure': ConfigureZyre,
@@ -183,6 +190,7 @@ cmdclass = {
     'configure_czmq': ConfigureCzmq,
     'build_ext': zbuild_ext,
     'build_py': BuildPyCommand,
+    'develop': DevelopCommand,
     'sdist': CheckSDist,
     'configure_sdist_czmq': ConfigureCzmqSdist,
     'configure_sdist_zyre': ConfigureZyreSdist,
