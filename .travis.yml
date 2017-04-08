@@ -8,8 +8,8 @@ python:
 
 before_install:
   - wget -nv http://download.opensuse.org/repositories/network:messaging:zeromq:git-draft/xUbuntu_14.04/Release.key -O Release.key
-  - apt-key add - < Release.key
-  - echo 'deb http://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-draft/xUbuntu_14.04/ /' > /etc/apt/sources.list.d/zeromq.list
+  - sudo apt-key add - < Release.key
+  - sudo echo 'deb http://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-draft/xUbuntu_14.04/ /' > /etc/apt/sources.list.d/zeromq.list
   - sudo apt-get update
   - sudo apt-get install uuid-dev libuuid1 libzyre-dev
   - pip install pip --upgrade
