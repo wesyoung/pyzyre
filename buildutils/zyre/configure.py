@@ -86,7 +86,7 @@ class ConfigureSDist(sdist):
 
         for f in files:
             shutil.copyfile(f, pjoin(bundledincludedir, basename(f)))
-            shutil.copyfile(f, pjoin(self.build_lib, bundledincludedir, basename(f)))
+            #shutil.copyfile(f, pjoin(self.build_lib, bundledincludedir, basename(f)))
 
 class Configure(build_ext):
 
@@ -173,7 +173,7 @@ class Configure(build_ext):
             ],
             extra_compile_args=compile_args,
             # http://stackoverflow.com/a/19147134
-            runtime_library_dirs=['.', 'zmq', 'zyre', 'czmq', '../czmq'],
+            runtime_library_dirs=['.', 'zyre', 'czmq', '../czmq'],
         )
 
         # register the extension:

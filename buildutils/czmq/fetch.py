@@ -17,12 +17,14 @@ ENABLE_CHECKSUM = False
 
 pjoin = os.path.join
 
+# https://github.com/zeromq/czmq/archive/v4.0.2.tar.gz
 bundled_version = (4, 0, 2)
 vs = '%i.%i.%i' % bundled_version
 libczmq = "czmq-%s.tar.gz" % vs
-libczmq_url = 'https://github.com/zeromq/czmq/archive//2fa9bbbf7a5d2ba7f424b6bf64327bb5f634fb5f.tar.gz'
-libczmq_checksum = "sha256:5a89dfd9ec1978eb98c25f315acad3033061f0924d2091ea296e2b7df2ec2837"
-
+libczmq_url = "https://github.com/zeromq/czmq/archive/v{vs}.tar.gz".format(
+    vs=vs,
+)
+libczmq_checksum = "sha256:794f80af7392ec8d361ad69646fc20aaa284d23fef92951334009771a732c810"
 
 
 HERE = os.path.dirname(__file__)

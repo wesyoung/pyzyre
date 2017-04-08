@@ -6,6 +6,7 @@ import shutil
 from glob import glob
 from os.path import basename, join as pjoin
 from subprocess import Popen, PIPE
+import platform
 import stat
 from ctypes import *
 
@@ -163,6 +164,10 @@ class Configure(build_ext):
         if os.name != 'nt':
             library_dirs.append('/usr/local/lib')  # osx needs this to find ossp-uuid
 
+        libraries = ['zmq', 'uuid']
+        if 'centos-7' in platform.platform():
+            libraries.append('systemd')
+
         libczmq = Extension(
             'czmq.libczmq',
             sources=czmq_sources,
@@ -170,12 +175,12 @@ class Configure(build_ext):
                 pjoin(bundledir, 'czmq', 'include'),
                 pjoin(bundledir, 'zeromq', 'include')
             ],
-            libraries=['zmq', 'uuid'],
+            libraries=libraries,
             library_dirs=library_dirs,
 
             extra_compile_args=compile_args,
             # http://stackoverflow.com/a/19147134
-            runtime_library_dirs=['.', 'zmq', 'czmq'],
+            runtime_library_dirs=['.', 'czmq'],
         )
 
         # http://stackoverflow.com/a/32765319/7205341

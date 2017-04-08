@@ -1,27 +1,25 @@
 sudo: required
 dist: trusty
 language: python
-
-cache:
-    apt
-    pip
+cache: apt pip
 
 python:
   - 2.7
-  #- 3.5 builds and names libzmq funny
 
 before_install:
+  - wget -nv http://download.opensuse.org/repositories/network:messaging:zeromq:git-draft/xUbuntu_14.04/Release.key -O Release.key
+  - apt-key add - < Release.key
+  - echo 'deb http://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-draft/xUbuntu_14.04/ /' > /etc/apt/sources.list.d/zeromq.list
   - sudo apt-get update
-  - sudo apt-get install uuid-dev libuuid1
+  - sudo apt-get install uuid-dev libuuid1 libzyre-dev
   - pip install pip --upgrade
   - pip install wheel cython
   - pip wheel --wheel-dir=dist netifaces==0.10.0
   - pip install -r dev_requirements.txt
 
 install:
-  - python setup.py bdist_wheel
-  - pip install dist/*.whl
-  - rm -rf czmq zyre
+  - python setup.py develop
+  - python setup.py sdist
 
 script:
   - python -c "import pyzyre; print(pyzyre.__version__)"
@@ -30,5 +28,15 @@ script:
   - python setup.py test
 
 notifications:
-    email:
-        on_success: never
+  email:
+    on_success: never
+
+deploy:
+  provider: pypi
+  user: wesyoung
+  password:
+    secure: G97/nmqbAycIEGYZR5ufUC9mxXvkRkIZ2nP3sPa0jWs9SfEXnE3haq2xdy261Ji2Zyb+lni899MC0u9HwXB4IAVAds9cUh9WuBNRHffvGMh982DH+2RNzbGxsuASWA9XbbiTbW2MoWmvtMtzEna213LlWNXVWcwWVMFT+3ofKzpjHZOfvaaWp5+2i5IazDdH01K8EmwAbZNAjUc2AmMF6IXD/aJIJqJ6SqI0UCwgps7RYXjdldX/FmPD6w9uOf4oW98eAEBcBYXpagB+GjbmPV9HB8mtS6OVonjqCZn8aiNYIIZTqLCxWnHoAoNrecH80ZyCalwSs7v9JAahM4RqgDgLGVIgl8RszqQgSA7gf+7Tia1FbI4/NoSh5Ey75jMNUuJKPYGFfnuvPtfnkbNaEnLQS77cr5QCkTTo75nX3n+GG7rD1B6eobD2fVju4dY2MP933ngnXDoZ32ZOpPUhZXiGgpLSdcvfvAZ3irAp/Y3SsnnJBi+OXsxrX+bdsjE9yGi5NXGc7Erw9+Xi4DVmTLZ8zVCsZHYmSyzUMWhla7/a2N3zH3Fy6hQzAVlmubz6/OqwdvgXKNITWVwOWjIk8F1ccdQmXHaZElSXfqROf+mLSioZ/N/VRKJN+yR/VRJC91/+p/4hSOo1wEBUV5TkTsQHemXy6jQ3wufjxcKsJ+Y=
+  on:
+    branch: master
+    tags: true
+    condition: $TRAVIS_PYTHON_VERSION = "2.7"

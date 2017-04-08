@@ -5,19 +5,17 @@ from __future__ import with_statement, print_function
 import os
 import sys
 from distutils.version import LooseVersion
-from setuptools import setup, Command
+from setuptools import setup
 import setuptools.command.build_py
 from buildutils.zmq.configure import Configure as ConfigureZmq
 from buildutils.czmq.configure import Configure as ConfigureCzmq, ConfigureSDist as ConfigureCzmqSdist
 from buildutils.zyre.configure import Configure as ConfigureZyre, ConfigureSDist as ConfigureZyreSdist
-#from buildutils.pyzmq.configure import Configure as ConfigurePyzmq
 from distutils.command.sdist import sdist
 from ctypes import *
 from buildutils.czmq.msg import fatal
 from subprocess import Popen, PIPE
 from setuptools.dist import Distribution
 from pprint import pprint
-from os.path import basename, join as pjoin
 
 import versioneer
 
@@ -69,9 +67,9 @@ if libuuid:
 
 
 if 'develop' in sys.argv:
-    zmqlibs = 'libzyre.2.so'
+    zmqlibs = 'libzyre.so'
     if sys.platform == 'darwin':
-        zmqlibs = 'libzyre.2.dylib'
+        zmqlibs = 'libzyre.dylib'
 
     try:
         cdll.LoadLibrary(zmqlibs)
@@ -188,16 +186,14 @@ cmdclass = {
     'sdist': CheckSDist,
     'configure_sdist_czmq': ConfigureCzmqSdist,
     'configure_sdist_zyre': ConfigureZyreSdist,
-    #'configure_pyzmq': ConfigurePyzmq
 }
 
 
 packages = ['czmq', 'zyre', 'pyzyre']
 
 package_data = {
-        'zyre': ['*' + lib_ext],
-        'czmq': ['*' + lib_ext]
-    }
+    'zyre': ['*' + lib_ext]
+}
 
 extensions = []
 
@@ -223,7 +219,7 @@ setup(
         'names',
         'pyzmq',
         'tornado',
-        'pyzmq>=16.0.1'
+        'pyzmq>=16.0.2'
     ],
     classifiers=[
         'Intended Audience :: Developers',
