@@ -15,21 +15,15 @@ from .msg import fatal, debug, info, warn
 
 pjoin = os.path.join
 
-# https://github.com/zeromq/zyre/releases/download/v3.0.2/zyre-3.0.2.tar.gz
-bundled_version = (0, 0, 4)
+# https://github.com/zeromq/zyre/archive/v2.0.0.tar.gz
+# the reg releases do not include the bindings dir(?)
+bundled_version = (2, 0, 0)
 vs = '%i.%i.%i' % bundled_version
 libzyre = "zyre-%s.tar.gz" % vs
-libzyre_url = "https://github.com/zeromq/zyre/releases/download/v{vs}/{libzyre}".format(
-    major=bundled_version[0],
-    minor=bundled_version[1],
+libzyre_url = "https://github.com/zeromq/zyre/archive/v{vs}.tar.gz".format(
     vs=vs,
-    libzyre=libzyre,
 )
-libzyre_checksum = "sha256:8bca39ab69375fa4e981daf87b3feae85384d5b40cef6adbe9d5eb063357699a"
-
-commit = 'cdbaab7e67c8ec2c896ae1c13607f36194f2a196'
-libzyre_url = 'https://github.com/zeromq/zyre/archive/{}.tar.gz'.format(commit)
-libzyre_checksum = "sha256:a5e1c0bbbf8c1c827923c5515900913e641f861f4af9236d82591c63b471b253"
+libzyre_checksum = "sha256:b978a999947ddb6722d956db2427869b313225e50518c4fbbf960a68109e3e91"
 
 HERE = os.path.dirname(__file__)
 ROOT = os.path.dirname(HERE)

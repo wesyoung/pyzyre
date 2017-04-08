@@ -1,10 +1,12 @@
 from distutils.ccompiler import get_default_compiler, new_compiler
 from distutils.extension import Extension
 from distutils.command.build_ext import build_ext
+from distutils.command.sdist import sdist
 import shutil
 from glob import glob
 from os.path import basename, join as pjoin
 from subprocess import Popen, PIPE
+from ctypes import *
 
 from .msg import *
 from .fetch import fetch_libzyre
@@ -60,6 +62,31 @@ def stage_platform_header(zmqroot):
     info("staging platform.h from: %s" % platform_dir)
     shutil.copy(pjoin(platform_dir, 'platform.h'), platform_h)
 
+
+class ConfigureSDist(sdist):
+    def run(self):
+        bundledir = "bundled"
+
+        line()
+
+        if not os.path.exists(bundledir):
+            os.makedirs(bundledir)
+
+        fetch_libzyre(bundledir)
+
+        bundledincludedir = 'zyre'
+
+        if not os.path.exists(bundledincludedir):
+            os.makedirs(bundledincludedir)
+
+        files = [
+            pjoin(bundledir, 'zyre', 'bindings', 'python', 'zyre', '_zyre_ctypes.py'),
+            pjoin(bundledir, 'zyre', 'bindings', 'python', 'zyre', '__init__.py')
+        ]
+
+        for f in files:
+            shutil.copyfile(f, pjoin(bundledincludedir, basename(f)))
+            shutil.copyfile(f, pjoin(self.build_lib, bundledincludedir, basename(f)))
 
 class Configure(build_ext):
 
@@ -146,7 +173,7 @@ class Configure(build_ext):
             ],
             extra_compile_args=compile_args,
             # http://stackoverflow.com/a/19147134
-            runtime_library_dirs=['.', 'zyre', 'czmq', '../czmq'],
+            runtime_library_dirs=['.', 'zmq', 'zyre', 'czmq', '../czmq'],
         )
 
         # register the extension:

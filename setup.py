@@ -8,13 +8,16 @@ from distutils.version import LooseVersion
 from setuptools import setup, Command
 import setuptools.command.build_py
 from buildutils.zmq.configure import Configure as ConfigureZmq
-from buildutils.czmq.configure import Configure as ConfigureCzmq
-from buildutils.zyre.configure import Configure as ConfigureZyre
+from buildutils.czmq.configure import Configure as ConfigureCzmq, ConfigureSDist as ConfigureCzmqSdist
+from buildutils.zyre.configure import Configure as ConfigureZyre, ConfigureSDist as ConfigureZyreSdist
+#from buildutils.pyzmq.configure import Configure as ConfigurePyzmq
+from distutils.command.sdist import sdist
 from ctypes import *
 from buildutils.czmq.msg import fatal
 from subprocess import Popen, PIPE
 from setuptools.dist import Distribution
 from pprint import pprint
+from os.path import basename, join as pjoin
 
 import versioneer
 
@@ -51,10 +54,9 @@ try:
 except Exception as e:
     raise ImportError('Cython >= 0.16 required')
 
-
 libuuid = 'libuuid.so'
 if sys.platform == 'darwin':
-    libuuid = '/opt/local/lib/libuuid.dylib'
+    libuuid = None
 
 if sys.platform.startswith('win'):
     libuuid = None
@@ -64,6 +66,18 @@ if libuuid:
         cdll.LoadLibrary(libuuid)
     except OSError:
         raise ImportError('Requires uuid-dev and libuuid1 to be installed')
+
+
+if 'develop' in sys.argv:
+    zmqlibs = 'libzyre.2.so'
+    if sys.platform == 'darwin':
+        zmqlibs = 'libzyre.2.dylib'
+
+    try:
+        cdll.LoadLibrary(zmqlibs)
+    except OSError as e:
+        print("\nhttps://github.com/wesyoung/pyzyre/wiki\n")
+        raise
 
 pypy = 'PyPy' in sys.version
 
@@ -97,6 +111,9 @@ class zbuild_ext(build_ext_c):
         build_ext_c.build_extension(self, ext)
 
     def run(self):
+
+        if 'develop' in sys.argv:
+            return
 
         self.distribution.run_command('configure_zmq')
         self.distribution.run_command('configure_czmq')
@@ -136,17 +153,29 @@ class zbuild_ext(build_ext_c):
         return r
 
 
+class CheckSDist(sdist):
+    def run(self):
+        self.run_command('configure_sdist_czmq')
+        self.run_command('configure_sdist_zyre')
+
+        sdist.run(self)
+
+
 class BinaryDistribution(Distribution):
     """Distribution which always forces a binary package with platform name"""
     def has_ext_modules(foo):
         if sys.platform == 'darwin':
             return True
 
+
 class BuildPyCommand(setuptools.command.build_py.build_py):
   """Custom build command."""
 
   def run(self):
-    self.run_command('build_ext')
+
+    if 'bdist_wheel' in sys.argv or os.getenv('PYZYRE_COMPILE') == '1':
+        self.run_command('build_ext')
+
     setuptools.command.build_py.build_py.run(self)
 
 cmdclass = versioneer.get_cmdclass()
@@ -156,13 +185,19 @@ cmdclass = {
     'configure_czmq': ConfigureCzmq,
     'build_ext': zbuild_ext,
     'build_py': BuildPyCommand,
+    'sdist': CheckSDist,
+    'configure_sdist_czmq': ConfigureCzmqSdist,
+    'configure_sdist_zyre': ConfigureZyreSdist,
+    #'configure_pyzmq': ConfigurePyzmq
 }
+
 
 packages = ['czmq', 'zyre', 'pyzyre']
 
 package_data = {
-    'zyre': ['*' + lib_ext]
-}
+        'zyre': ['*' + lib_ext],
+        'czmq': ['*' + lib_ext]
+    }
 
 extensions = []
 

@@ -6,5 +6,5 @@ include README.md LICENSE
 include requirements.txt dev_requirements.txt
 recursive-include buildutils *
 recursive-exclude bundled *
-recursive-exclude zyre *
-recursive-exclude czmq *
+#recursive-exclude zyre *
+#recursive-exclude czmq *
