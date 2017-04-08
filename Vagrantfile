@@ -8,15 +8,14 @@ wget -nv http://download.opensuse.org/repositories/network:messaging:zeromq:git-
 apt-key add - < Release.key
 
 # https://software.opensuse.org/download/package.iframe?project=network:messaging:zeromq:git-draft&package=zyre
-#echo 'deb http://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-draft/xUbuntu_16.04/ /' > /etc/apt/sources.list.d/zeromq.list
+echo 'deb http://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-draft/xUbuntu_16.04/ /' > /etc/apt/sources.list.d/zeromq.list
 
 apt-get update
 apt-get install -y aptitude python-pip python-dev git htop virtualenvwrapper python2.7 python-virtualenv cython git \
     build-essential libtool pkg-config autotools-dev autoconf automake cmake libpcre3-dev valgrind libffi-dev zip \
-    uuid-dev
+    uuid-dev libzyre-dev
 
-#pip install pip --upgrade
-#pip install pyzmq==16.0.2 --no-binary :all:
+pip install pip --upgrade
 
 SCRIPT
 
