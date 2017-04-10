@@ -4,8 +4,6 @@
 $script = <<SCRIPT
 #alias aptitude='aptitude -F "%c %p %d %V"' >> /home/ubuntu/.bashrc
 
-# https://software.opensuse.org/download/package.iframe?project=network:messaging:zeromq:git-draft&package=zyre
-
 wget -nv http://download.opensuse.org/repositories/home:wesyoung:zeromq/xUbuntu_16.04/Release.key -O Release.key
 apt-key add - < Release.key
 
