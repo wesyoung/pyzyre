@@ -7,9 +7,10 @@ from glob import glob
 from os.path import basename, join as pjoin
 from subprocess import Popen, PIPE
 import platform
+import re
 import stat
 from ctypes import *
-import re
+
 from .msg import *
 from .fetch import fetch_libczmq
 
