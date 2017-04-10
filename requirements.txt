@@ -3,4 +3,6 @@ cython>=0.16,<1.0
 netaddr>=0.7.18,<1.0
 names>=0.3.0,<0.4
 tornado>=4.4.2,<4.5
-https://github.com/zeromq/pyzmq/archive/f37052960e1dc510ea2c1d2e69a32d727afa9d69.tar.gz#egg=pyzmq>16.0.1
+#pyzmq>=16.0.2 --no-binary pyzmq
+# work-around
+https://github.com/minrk/pyzmq/archive/873bd714dcab721914526b70967041126338b158.tar.gz

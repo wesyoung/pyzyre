@@ -89,6 +89,7 @@ class Configure(build_ext):
     user_options = build_ext.user_options + [
         ('zmq=', None, "libzmq install prefix"),
         ('build-base=', 'b', "base directory for build library"),  # build_base from build
+        ('embed', None, '')
 
     ]
 
@@ -96,6 +97,7 @@ class Configure(build_ext):
         build_ext.initialize_options(self)
         self.zmq = None
         self.build_base = 'build'
+        self.embed = False
 
     # DON'T REMOVE: distutils demands these be here even if they do nothing.
     def finalize_options(self):

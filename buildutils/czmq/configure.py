@@ -1,11 +1,15 @@
 from distutils.ccompiler import get_default_compiler, new_compiler
 from distutils.extension import Extension
 from distutils.command.build_ext import build_ext
+from distutils.command.sdist import sdist
 import shutil
 from glob import glob
 from os.path import basename, join as pjoin
 from subprocess import Popen, PIPE
+import platform
+import re
 import stat
+from ctypes import *
 
 from .msg import *
 from .fetch import fetch_libczmq
@@ -58,6 +62,33 @@ def stage_platform_header(zmqroot):
 
     info("staging platform.h from: %s" % platform_dir)
     shutil.copy(pjoin(platform_dir, 'platform.h'), platform_h)
+
+
+class ConfigureSDist(sdist):
+    def run(self):
+        bundledir = "bundled"
+
+        line()
+        info("Using bundled libczmq")
+
+        # fetch sources for libzmq extension:
+        if not os.path.exists(bundledir):
+            os.makedirs(bundledir)
+
+        fetch_libczmq(bundledir)
+
+        bundledincludedir = 'czmq'
+
+        if not os.path.exists(bundledincludedir):
+            os.makedirs(bundledincludedir)
+
+        files = [
+            pjoin(bundledir, 'czmq', 'bindings', 'python', 'czmq', '_czmq_ctypes.py'),
+            pjoin(bundledir, 'czmq', 'bindings', 'python', 'czmq', '__init__.py')
+        ]
+
+        for f in files:
+            shutil.copyfile(f, pjoin(bundledincludedir, basename(f)))
 
 
 class Configure(build_ext):
@@ -134,6 +165,11 @@ class Configure(build_ext):
         if os.name != 'nt':
             library_dirs.append('/usr/local/lib')  # osx needs this to find ossp-uuid
 
+        libraries = ['zmq', 'uuid']
+
+        if re.search(r'centos-7|Ubuntu-16', platform.platform()):
+            libraries.append('systemd')
+
         libczmq = Extension(
             'czmq.libczmq',
             sources=czmq_sources,
@@ -141,12 +177,12 @@ class Configure(build_ext):
                 pjoin(bundledir, 'czmq', 'include'),
                 pjoin(bundledir, 'zeromq', 'include')
             ],
-            libraries=['zmq', 'uuid'],
+            libraries=libraries,
             library_dirs=library_dirs,
 
             extra_compile_args=compile_args,
             # http://stackoverflow.com/a/19147134
-            runtime_library_dirs=['.', 'czmq'],
+            runtime_library_dirs=['zmq', 'czmq', '.'],
         )
 
         # http://stackoverflow.com/a/32765319/7205341

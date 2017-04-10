@@ -11,7 +11,6 @@ import zmq
 
 ioloop.install()
 
-
 @pytest.fixture
 def iface():
     if sys.platform == 'darwin':
@@ -38,12 +37,17 @@ def test_client_beacon(iface):
 
     def test_fcn():
         c2.shout('ZYRE', 'TEST')
-        sleep(2)
+        sleep(1)
 
     loop.run_sync(test_fcn)
 
     c1.stop_zyre()
     c2.stop_zyre()
+
+    loop.remove_handler(c1.actor)
+
+    # cleanup
+    sleep(1)
 
 
 def test_client_gossip(iface):
@@ -61,9 +65,14 @@ def test_client_gossip(iface):
 
     def test_fcn():
         c2.shout('ZYRE', 'TEST')
-        sleep(2)
+        sleep(1)
 
     loop.run_sync(test_fcn)
 
     c1.stop_zyre()
     c2.stop_zyre()
+
+    loop.remove_handler(c1.actor)
+
+    # cleanup
+    sleep(1)

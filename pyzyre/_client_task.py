@@ -167,3 +167,5 @@ def task(pipe, arg):
 
     logger.info('shutting down node')
     n.stop()
+
+    logger.debug('done')

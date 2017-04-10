@@ -17,23 +17,14 @@ from .msg import fatal, debug, info, warn
 
 pjoin = os.path.join
 
-bundled_version = (4, 1, 5)
+# https://github.com/zeromq/libzmq/releases/download/v4.2.2/zeromq-4.2.2.tar.gz
+bundled_version = (4, 2, 2)
 vs = '%i.%i.%i' % bundled_version
 libzmq = "zeromq-%s.tar.gz" % vs
-libzmq_url = "https://github.com/zeromq/zeromq{major}-{minor}/releases/download/v{vs}/{libzmq}".format(
-    major=bundled_version[0],
-    minor=bundled_version[1],
+libzmq_url = "https://github.com/zeromq/libzmq/releases/download/v{vs}/zeromq-{vs}.tar.gz".format(
     vs=vs,
-    libzmq=libzmq,
 )
-libzmq_checksum = "sha256:04aac57f081ffa3a2ee5ed04887be9e205df3a7ddade0027460b8042432bdbcf"
-
-# # libzmq master
-# bundled_version = (4, 2, 0)
-# vs = '%i.%i.%i' % bundled_version
-# libzmq = "zeromq-%s.tar.gz" % vs
-# libzmq_url = 'https://github.com/zeromq/libzmq/archive/7f8c17b1241cfd0dfbe56a11a7d16939aa4cc49f.tar.gz'
-# libzmq_checksum = 'sha256:59fed82a4f4499549634294960f9da44736ed9a0bf032ce9a8f5d72f40111cc1'
+libzmq_checksum = "sha256:5b23f4ca9ef545d5bd3af55d305765e3ee06b986263b31967435d285a3e6df6b"
 
 HERE = os.path.dirname(__file__)
 ROOT = os.path.dirname(HERE)

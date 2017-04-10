@@ -13,25 +13,19 @@ except ImportError:
 
 from .msg import fatal, debug, info, warn
 
+ENABLE_CHECKSUM = False
+
 pjoin = os.path.join
 
-# https://github.com/zeromq/czmq/releases/download/v3.0.2/czmq-3.0.2.tar.gz
-bundled_version = (3, 0, 2)
+# https://github.com/zeromq/czmq/archive/v4.0.2.tar.gz
+bundled_version = (4, 0, 2)
 vs = '%i.%i.%i' % bundled_version
 libczmq = "czmq-%s.tar.gz" % vs
-libczmq_url = "https://github.com/zeromq/czmq/releases/download/v{vs}/{libczmq}".format(
-    major=bundled_version[0],
-    minor=bundled_version[1],
+libczmq_url = "https://github.com/zeromq/czmq/archive/v{vs}.tar.gz".format(
     vs=vs,
-    libczmq=libczmq,
 )
-libczmq_checksum = "sha256:8bca39ab69375fa4e981daf87b3feae85384d5b40cef6adbe9d5eb063357699a"
+libczmq_checksum = "sha256:794f80af7392ec8d361ad69646fc20aaa284d23fef92951334009771a732c810"
 
-bundled_version = (3, 0, 3)
-vs = '%i.%i.%i' % bundled_version
-libczmq = "czmq-%s.tar.gz" % vs
-libczmq_url = 'https://github.com/zeromq/czmq/archive/cf9b3927f1b3dc72dcfc07a478b15373d0d7b9f8.tar.gz'
-libczmq_checksum = "sha256:5a89dfd9ec1978eb98c25f315acad3033061f0924d2091ea296e2b7df2ec2837"
 
 HERE = os.path.dirname(__file__)
 ROOT = os.path.dirname(HERE)
@@ -70,6 +64,8 @@ def fetch_archive(savedir, url, fname, checksum, force=False):
 
     if os.path.exists(dest) and not force:
         info("already have %s" % dest)
+        if not ENABLE_CHECKSUM:
+            return dest
         digest = checksum_file(scheme, fname)
         if digest == digest_ref:
             return dest
@@ -84,6 +80,8 @@ def fetch_archive(savedir, url, fname, checksum, force=False):
     with open(dest, 'wb') as f:
         f.write(req.read())
     digest = checksum_file(scheme, dest)
+    if not ENABLE_CHECKSUM:
+        return dest
     if digest != digest_ref:
         fatal("%s %s mismatch:\nExpected: %s\nActual  : %s" % (
             dest, scheme, digest_ref, digest))

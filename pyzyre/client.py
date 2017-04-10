@@ -145,7 +145,6 @@ class Client(object):
         self.actor.send_multipart(['$$STOP'.encode('utf-8')])
         m = self.actor.recv_multipart()
         sleep(0.01)
-        self.actor.close()
         del self._actor
 
     def join(self, group):
