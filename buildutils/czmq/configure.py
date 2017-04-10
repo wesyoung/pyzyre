@@ -180,7 +180,7 @@ class Configure(build_ext):
 
             extra_compile_args=compile_args,
             # http://stackoverflow.com/a/19147134
-            runtime_library_dirs=['.', 'czmq'],
+            runtime_library_dirs=['zmq', 'czmq'],
         )
 
         # http://stackoverflow.com/a/32765319/7205341

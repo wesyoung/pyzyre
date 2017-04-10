@@ -12,6 +12,7 @@ from buildutils.zmq.configure import Configure as ConfigureZmq
 from buildutils.czmq.configure import Configure as ConfigureCzmq, ConfigureSDist as ConfigureCzmqSdist
 from buildutils.zyre.configure import Configure as ConfigureZyre, ConfigureSDist as ConfigureZyreSdist
 from distutils.command.sdist import sdist
+from distutils.command.install import install
 from ctypes import *
 from buildutils.czmq.msg import fatal
 from subprocess import Popen, PIPE
@@ -35,7 +36,7 @@ if sys.argv[-1] == 'test':
         err_msg = e.message.replace("No module named ", "")
         msg = "%s is not installed. Install your test requirements." % err_msg
         raise ImportError(msg)
-    r = os.system('py.test test -v')
+    r = os.system('py.test test -v -s')
     if r == 0:
         sys.exit()
     else:
@@ -64,19 +65,12 @@ if libuuid:
     try:
         cdll.LoadLibrary(libuuid)
     except OSError:
-        raise ImportError('Requires uuid-dev and libuuid1 to be installed')
+        print("\nuuid.so needs to be installed, for more info checkout:\nhttps://github.com/wesyoung/pyzyre/wiki\n")
+        raise SystemExit
 
-
-if 'develop' in sys.argv:
-    zmqlibs = 'libzyre.so'
-    if sys.platform == 'darwin':
-        zmqlibs = 'libzyre.dylib'
-
-    try:
-        cdll.LoadLibrary(zmqlibs)
-    except OSError as e:
-        print("\nhttps://github.com/wesyoung/pyzyre/wiki\n")
-        raise
+zmqlib = 'libzyre.so'
+if sys.platform == 'darwin':
+    zmqlib = 'libzyre.dylib'
 
 pypy = 'PyPy' in sys.version
 
@@ -172,16 +166,34 @@ class BuildPyCommand(setuptools.command.build_py.build_py):
 
   def run(self):
 
-    if 'bdist_wheel' in sys.argv or os.getenv('PYZYRE_COMPILE') == '1':
+    if 'bdist_wheel' in sys.argv and os.getenv('PYZYRE_COMPILE') == '1':
         self.run_command('build_ext')
+    else:
+        # we're probably trying to install
+        # check to make sure libzyre.so exists
+        try:
+            cdll.LoadLibrary(zmqlib)
+        except OSError:
+            e = "\nlibzyre.so needs to be installed, for more info checkout:\nhttps://github.com/wesyoung/pyzyre/wiki\n"
+            print(e)
+            raise SystemError(e)
 
     setuptools.command.build_py.build_py.run(self)
 
 
 class DevelopCommand(develop):
     def run(self):
+        try:
+            cdll.LoadLibrary(zmqlib)
+        except OSError:
+            print(
+                "\nlibzyre.so needs to be installed, for more info checkout:\nhttps://github.com/wesyoung/pyzyre/wiki\n"
+            )
+            raise SystemExit
+
         self.run_command('sdist')
         develop.run(self)
+
 
 cmdclass = versioneer.get_cmdclass()
 cmdclass = {

@@ -2,13 +2,14 @@
 # vi: set ft=ruby :
 
 $script = <<SCRIPT
-#echo "alias aptitude='aptitude -F \"%c %p %d %V\"'" >> /home/ubuntu/.bashrc
-
-wget -nv http://download.opensuse.org/repositories/network:messaging:zeromq:git-draft/xUbuntu_16.04/Release.key -O Release.key
-apt-key add - < Release.key
+#alias aptitude='aptitude -F "%c %p %d %V"' >> /home/ubuntu/.bashrc
 
 # https://software.opensuse.org/download/package.iframe?project=network:messaging:zeromq:git-draft&package=zyre
-echo 'deb http://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-draft/xUbuntu_16.04/ /' > /etc/apt/sources.list.d/zeromq.list
+
+wget -nv http://download.opensuse.org/repositories/home:wesyoung:zeromq/xUbuntu_16.04/Release.key -O Release.key
+apt-key add - < Release.key
+
+echo 'deb http://download.opensuse.org/repositories/home:/wesyoung:/zeromq/xUbuntu_16.04/ /' > /etc/apt/sources.list.d/zeromq.list
 
 apt-get update
 apt-get install -y aptitude python-pip python-dev git htop virtualenvwrapper python2.7 python-virtualenv cython git \
