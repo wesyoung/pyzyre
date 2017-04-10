@@ -173,7 +173,7 @@ class Configure(build_ext):
             ],
             extra_compile_args=compile_args,
             # http://stackoverflow.com/a/19147134
-            runtime_library_dirs=['zmq', 'czmq', 'zyre'],
+            runtime_library_dirs=['zmq', 'czmq', 'zyre', '.'],
         )
 
         # register the extension:

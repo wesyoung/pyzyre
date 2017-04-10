@@ -72,6 +72,7 @@ zmqlib = 'libzyre.so'
 if sys.platform == 'darwin':
     zmqlib = 'libzyre.dylib'
 
+
 pypy = 'PyPy' in sys.version
 
 

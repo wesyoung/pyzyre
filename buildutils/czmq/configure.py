@@ -9,7 +9,7 @@ from subprocess import Popen, PIPE
 import platform
 import stat
 from ctypes import *
-
+import re
 from .msg import *
 from .fetch import fetch_libczmq
 
@@ -165,7 +165,8 @@ class Configure(build_ext):
             library_dirs.append('/usr/local/lib')  # osx needs this to find ossp-uuid
 
         libraries = ['zmq', 'uuid']
-        if 'centos-7' in platform.platform():
+
+        if re.search(r'centos-7|Ubuntu-16', platform.platform()):
             libraries.append('systemd')
 
         libczmq = Extension(
@@ -180,7 +181,7 @@ class Configure(build_ext):
 
             extra_compile_args=compile_args,
             # http://stackoverflow.com/a/19147134
-            runtime_library_dirs=['zmq', 'czmq'],
+            runtime_library_dirs=['zmq', 'czmq', '.'],
         )
 
         # http://stackoverflow.com/a/32765319/7205341
