@@ -60,7 +60,9 @@ class Client(object):
         self.beacon = kwargs.get('beacon')
         self.gossip_connect = kwargs.get('gossip_connect')
         self.endpoint = kwargs.get('endpoint')
-        self.name = kwargs.get('name', names.get_full_name())
+
+        name = '{}_{}'.format(names.get_first_name().lower(), names.get_last_name().lower())
+        self.name = kwargs.get('name', name)
         self.actor = None
         self.task = zactor_fn(client_task)
         self.verbose = kwargs.get('verbose')

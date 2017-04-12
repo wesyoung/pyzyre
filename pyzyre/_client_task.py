@@ -18,7 +18,8 @@ def task(pipe, arg):
     args = string_at(arg)
     args = dict(item.split("=") for item in args.split(","))
 
-    name = args.get('name', names.get_full_name())
+    name = '{}_{}'.format(names.get_first_name().lower(), names.get_last_name().lower())
+    name = args.get('name', name)
     group = args.get('group', ZYRE_GROUP)
     verbose = args.get('verbose')
 
