@@ -238,9 +238,8 @@ setup(
         'netaddr',
         'cython>=0.16',
         'names',
-        'pyzmq',
         'tornado',
-        'pyzmq>=16.0.2'
+        'pyzmq'
     ],
     classifiers=[
         'Intended Audience :: Developers',

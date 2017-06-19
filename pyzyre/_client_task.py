@@ -12,6 +12,7 @@ logger = logging.getLogger('')
 
 EVASIVE_TIMEOUT = os.environ.get('ZYRE_EVASIVE_TIMEOUT', 5000)  # zyre defaults
 EXPIRED_TIMEOUT = os.environ.get('ZYRE_EXPIRED_TIMEOUT', 30000)
+TRACE = os.getenv('ZYRE_TRACE')
 
 
 def task(pipe, arg):
@@ -21,7 +22,6 @@ def task(pipe, arg):
     name = '{}_{}'.format(names.get_first_name().lower(), names.get_last_name().lower())
     name = args.get('name', name)
     group = args.get('group', ZYRE_GROUP)
-    verbose = args.get('verbose')
 
     logger.info('setting up node: %s' % name)
     n = Zyre(name)
@@ -32,7 +32,7 @@ def task(pipe, arg):
     logger.debug('setting experation timer: {}'.format(EXPIRED_TIMEOUT))
     n.set_expired_timeout(int(EXPIRED_TIMEOUT))
 
-    if verbose == '1':
+    if TRACE:
         logger.info('setting verbose...')
         logger.setLevel(logging.DEBUG)
         n.set_verbose()

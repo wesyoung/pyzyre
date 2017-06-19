@@ -11,7 +11,7 @@ from ._client_task import task as client_task
 import sys
 from zmq.eventloop import ioloop
 from time import sleep
-from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_GROUP, LOG_FORMAT, PYVERSION
+from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_GROUP, LOG_FORMAT, PYVERSION, GOSSIP_CONNECT, ENDPOINT
 
 logger = logging.getLogger(__name__)
 
@@ -58,75 +58,94 @@ class Client(object):
         self.parent_loop = kwargs.get('loop')
         self.gossip_bind = kwargs.get('gossip_bind')
         self.beacon = kwargs.get('beacon')
-        self.gossip_connect = kwargs.get('gossip_connect')
-        self.endpoint = kwargs.get('endpoint')
+        self.gossip_connect = kwargs.get('gossip_connect', GOSSIP_CONNECT)
+        self.endpoint = kwargs.get('endpoint', ENDPOINT)
 
         name = '{}_{}'.format(names.get_first_name().lower(), names.get_last_name().lower())
         self.name = kwargs.get('name', name)
+
         self.actor = None
         self.task = zactor_fn(client_task)
         self.verbose = kwargs.get('verbose')
 
         if self.gossip_bind:
             self.beacon = False
+
         elif self.gossip_connect:
             self.beacon = False
+
         else:
             self.beacon = True
 
         self._init_zyre()
+
+    def _init_beacon(self):
+        logger.debug(self.interface)
+        os.environ["ZSYS_INTERFACE"] = self.interface
+
+    def _init_gossip_bind(self):
+        # is gossip_bind an interface?
+        if len(self.gossip_bind) <= 5:
+            # we need this to resolve the endpoint
+            self.interface = self.gossip_bind
+            if not self.endpoint:
+                self.endpoint = resolve_endpoint(SERVICE_PORT, interface=self.interface)
+
+        self.gossip_bind = resolve_gossip(GOSSIP_PORT, self.gossip_bind)
+        logger.debug('gossip-bind: %s' % self.gossip_bind)
+
+        if not self.endpoint:
+            if self.interface:
+                self.endpoint = resolve_endpoint(SERVICE_PORT, interface=self.interface)
+            else:
+                raise RuntimeError('A local interface must be specified')
+
+    def _init_gossip_connect(self):
+        try:
+            logger.info('resolving gossip-connect: {}'.format(self.gossip_connect))
+            self.gossip_connect = resolve_gossip(GOSSIP_PORT, self.gossip_connect)
+            logger.debug('gossip-connect: %s' % self.gossip_connect)
+
+        except RuntimeError as e:
+            logger.error(e)
+            logger.debug('falling back to beacon mode..')
+            self.beacon = 1
+            self.gossip_connect = None
+
+        if not self.endpoint:
+            if self.interface:
+                self.endpoint = resolve_endpoint(SERVICE_PORT, interface=self.interface)
+            else:
+                raise RuntimeError('A local interface must be specified')
 
     def _init_zyre(self):
         # setup czmq/zyre
         # disable CZMQ from capturing SIGINT
         os.environ['ZSYS_SIGHANDLER'] = 'false'
 
-        # signal zbeacon in czmq
+        if self.gossip_bind:
+            self._init_gossip_bind()
+
+        if self.gossip_connect:
+            self._init_gossip_connect()
+
         if self.beacon:
-            logger.debug(self.interface)
-            os.environ["ZSYS_INTERFACE"] = self.interface
-        else:
-            if self.gossip_bind:
-                # is gossip_bind an interface?
-                if len(self.gossip_bind) <= 5:
-                    # we need this to resolve the endpoint
-                    self.interface = self.gossip_bind
-                    if not self.endpoint:
-                        self.endpoint = resolve_endpoint(SERVICE_PORT, interface=self.interface)
-
-                self.gossip_bind = resolve_gossip(GOSSIP_PORT, self.gossip_bind)
-                logger.debug('gossip-bind: %s' % self.gossip_bind)
-
-            # gossip_connect
-            else:
-                try:
-                    logger.info('resolving gossip-connect: {}'.format(self.gossip_connect))
-                    self.gossip_connect = resolve_gossip(GOSSIP_PORT, self.gossip_connect)
-                    logger.debug('gossip-connect: %s' % self.gossip_connect)
-                except RuntimeError as e:
-                    logger.error(e)
-                    logger.debug('falling back to beacon mode..')
-                    self.beacon = 1
-                    self.gossip_connect = None
-
-            if not self.endpoint:
-                if self.interface:
-                    self.endpoint = resolve_endpoint(SERVICE_PORT, interface=self.interface)
-                else:
-                    raise RuntimeError('A local interface must be specified')
+            self._init_beacon()
 
         actor_args = [
             'group=%s' % self.group,
             'name=%s' % self.name,
         ]
 
-        if self.verbose or logger.getEffectiveLevel() == logging.DEBUG:
+        if self.verbose:
             actor_args.append('verbose=1')
 
         if self.gossip_bind:
             actor_args.append('gossip_bind=%s' % self.gossip_bind)
+
         elif self.gossip_connect:
             actor_args.append('gossip_connect=%s' % self.gossip_connect)
+
         else:
             actor_args.append('beacon=1')
 
@@ -243,6 +262,7 @@ def main():
         loop=loop,
         gossip_bind=args.gossip_bind,
         gossip_connect=args.gossip_connect,
+        endpoint=args.endpoint,
         verbose=verbose,
         interface=args.interface,
     )

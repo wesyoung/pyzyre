@@ -2,6 +2,7 @@ import netifaces as ni
 import netaddr
 import os.path
 import socket
+from pprint import pprint
 
 
 def resolve_interface(address):
@@ -11,6 +12,7 @@ def resolve_interface(address):
         ii = ni.ifaddresses(i)
         if not ii.get(ni.AF_INET):
             continue
+
         ii = ii[ni.AF_INET]
         ii = netaddr.IPNetwork('{}/{}'.format(ii[0]['addr'], ii[0]['netmask']))
         try:
@@ -20,18 +22,34 @@ def resolve_interface(address):
             pass
 
 
-def resolve_address(interface):
-    i = ni.ifaddresses(interface)
+def resolve_address(i):
+    return interface_to_address(i)
+
+
+def interface_to_address(i):
+    i = ni.ifaddresses(i)
     i = i[ni.AF_INET]
     i = i[0]['addr']
     return i
+
+
+def default_address():
+    i = default_interface()
+    return interface_to_address(i)
+
+
+def default_interface():
+    try:
+        return ni.gateways()['default'][ni.gateways()['default'].keys()[0]][1]
+    except IndexError:
+        raise RuntimeError("Unable to determine endpoint address")
 
 
 def resolve_endpoint(port, address=None, interface=None):
     endpoint = address
 
     if address:
-        if address.startswith('ipc://'):
+        if address.startswith(('ipc://', 'tcp://', 'udp://')):
             return address
 
         try:
@@ -50,18 +68,17 @@ def resolve_endpoint(port, address=None, interface=None):
 
         if port not in address:
             endpoint = '{}:{}'.format(endpoint, port)
-    else:
-        if interface and interface != '*':
-            i = ni.ifaddresses(interface)
-            i = i[ni.AF_INET]
-            i = i[0]['addr']
-            endpoint = 'tcp://{}:{}'.format(i, port)
-        else:
-            try:
-                endpoint = ni.gateways()['default'][ni.gateways()['default'].keys()[0]][0]
-                endpoint = 'tcp://{}:{}'.format(endpoint, port)
-            except IndexError:
-                raise RuntimeError('unable to set endpoint address')
+
+        return endpoint
+
+    if interface and interface != '*':
+        i = interface_to_address(interface)
+        endpoint = 'tcp://{}:{}'.format(i, port)
+        return endpoint
+
+    endpoint = default_address()
+    endpoint = 'tcp://{}:{}'.format(endpoint, port)
+
     return endpoint
 
 

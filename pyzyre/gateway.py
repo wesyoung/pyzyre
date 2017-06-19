@@ -29,8 +29,8 @@ def main():
     p.add_argument('-i', '--interface', help='specify zsys_interface for beacon')
     p.add_argument('-l', '--endpoint', help='specify ip listening endpoint [default %(default)s]', default=endpoint)
     p.add_argument('-d', '--debug', help='enable debugging', action='store_true')
-    p.add_argument('-p', '--pub', help='endpoint to bind for PUB socket', default="tcp://*:5001")
-    p.add_argument('-u', '--pull', help='endpoint to bind for PULL socket', default="tcp://*:5002")
+    p.add_argument('-p', '--pub', help='endpoint to bind for PUB socket [default %(default)s]', default="tcp://*:5001")
+    p.add_argument('-u', '--pull', help='endpoint to bind for PULL socket [default %(default)s]', default="tcp://*:5002")
 
     p.add_argument('--group', default=ZYRE_GROUP)
 
@@ -51,12 +51,19 @@ def main():
     ioloop.install()
     loop = ioloop.IOLoop.instance()
 
-
     context = zmq.Context()
     pub = context.socket(zmq.PUB)
+    if not args.pub.startswith(('tcp://', 'udp://', 'ipc://')):
+        args.pub = 'tcp://%s' % args.pub
+
+    logger.info('listing for PUB on %s' % args.pub)
     pub.bind(args.pub)
 
     pull = context.socket(zmq.PULL)
+    if not args.pull.startswith(('tcp://', 'udp://', 'ipc://')):
+        args.pull = 'tcp://%s' % args.pull
+
+    logger.info('listing for PULL on %s' % args.pull)
     pull.bind(args.pull)
 
     client = Client(
@@ -65,6 +72,7 @@ def main():
         loop=loop,
         gossip_bind=args.gossip_bind,
         gossip_connect=args.gossip_connect,
+        endpoint=args.endpoint,
         verbose=verbose,
         interface=args.interface,
     )
