@@ -126,6 +126,7 @@ def task(pipe, arg):
                 elif msg_type == 'SHOUT':
                     g = message.popstr()
                     msg = message.popstr()
+                    logger.debug('shouting[%s]: %s' % (g, msg))
                     n.shouts(g, "%s", msg)
 
                 else:
