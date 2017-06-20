@@ -13,6 +13,8 @@ from zmq.eventloop import ioloop
 from time import sleep
 from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_GROUP, LOG_FORMAT, PYVERSION, GOSSIP_CONNECT, ENDPOINT
 
+NODE_NAME = os.getenv('ZYRE_NODE_NAME')
+
 logger = logging.getLogger(__name__)
 
 
@@ -27,6 +29,9 @@ class DefaultHandler(object):
         pass
 
     def on_join(self, client, peer, group):
+        pass
+
+    def on_leave(self, client, peer, group):
         pass
 
     def on_exit(self, client, peer):
@@ -61,8 +66,9 @@ class Client(object):
         self.gossip_connect = kwargs.get('gossip_connect', GOSSIP_CONNECT)
         self.endpoint = kwargs.get('endpoint', ENDPOINT)
 
-        name = '{}_{}'.format(names.get_first_name().lower(), names.get_last_name().lower())
-        self.name = kwargs.get('name', name)
+        self.name = kwargs.get('name', NODE_NAME)
+        if not self.name:
+            self.name = '{}_{}'.format(names.get_first_name().lower(), names.get_last_name().lower())
 
         self.actor = None
         self.task = zactor_fn(client_task)
@@ -223,6 +229,11 @@ class Client(object):
         elif m_type == 'JOIN':
             peer, group = m
             self.handler.on_join(self, peer, group)
+
+        elif m_type == 'LEAVE':
+            peer, group = m
+            self.handler.on_leave(self, peer, group)
+
         else:
             logger.warn("unhandled m_type {} rest of message is {}".format(m_type, m))
 
