@@ -238,9 +238,8 @@ setup(
         'netaddr',
         'cython>=0.16',
         'names',
-        'pyzmq',
         'tornado',
-        'pyzmq>=16.0.2'
+        'pyzmq>=16.0.1'
     ],
     classifiers=[
         'Intended Audience :: Developers',
@@ -250,7 +249,8 @@ setup(
         'console_scripts': [
             'zyre-chat=pyzyre.client:main',
             'zyre-proxy=pyzyre.proxy:main',
-            'zyre-gateway=pyzyre.gateway:main'
+            'zyre-gateway=pyzyre.gateway:main',
+            'zyre-broker=pyzyre.broker:main'
         ]
     }
 )

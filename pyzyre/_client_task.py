@@ -12,16 +12,20 @@ logger = logging.getLogger('')
 
 EVASIVE_TIMEOUT = os.environ.get('ZYRE_EVASIVE_TIMEOUT', 5000)  # zyre defaults
 EXPIRED_TIMEOUT = os.environ.get('ZYRE_EXPIRED_TIMEOUT', 30000)
+TRACE_EVASIVE = os.getenv('ZYRE_EVASITVE_TRACE')
+NODE_NAME = os.getenv('ZYRE_NODE_NAME')
+TRACE = os.getenv('ZYRE_TRACE')
 
 
 def task(pipe, arg):
     args = string_at(arg)
     args = dict(item.split("=") for item in args.split(","))
 
-    name = '{}_{}'.format(names.get_first_name().lower(), names.get_last_name().lower())
-    name = args.get('name', name)
+    name = args.get('name')
+    if not name:
+        raise RuntimeError('missing node name')
+
     group = args.get('group', ZYRE_GROUP)
-    verbose = args.get('verbose')
 
     logger.info('setting up node: %s' % name)
     n = Zyre(name)
@@ -32,7 +36,7 @@ def task(pipe, arg):
     logger.debug('setting experation timer: {}'.format(EXPIRED_TIMEOUT))
     n.set_expired_timeout(int(EXPIRED_TIMEOUT))
 
-    if verbose == '1':
+    if TRACE:
         logger.info('setting verbose...')
         logger.setLevel(logging.DEBUG)
         n.set_verbose()
@@ -98,6 +102,8 @@ def task(pipe, arg):
 
                 # message to quit
                 if msg_type == "$$STOP":
+                    for g in group:
+                        n.leave(g)
                     terminated = True
 
                 elif msg_type == '$$ID':
@@ -120,6 +126,7 @@ def task(pipe, arg):
                 elif msg_type == 'SHOUT':
                     g = message.popstr()
                     msg = message.popstr()
+                    logger.debug('shouting[%s]: %s' % (g, msg))
                     n.shouts(g, "%s", msg)
 
                 else:
@@ -137,6 +144,10 @@ def task(pipe, arg):
                     peers[e.peer_name()] = e.peer_uuid()
                     pipe_s.send_multipart(['ENTER', e.peer_uuid(), e.peer_name()])
                     #headers = e.headers() # zlist
+
+                elif msg_type == 'LEAVE':
+                    logger.debug('LEAVE [{}] [{}]'.format(e.group(), e.peer_name()))
+                    pipe_s.send_multipart(['LEAVE', e.peer_name(), e.group()])
 
                 elif msg_type == 'JOIN':
                     logger.debug('JOIN [{}] [{}]'.format(e.group(), e.peer_name()))
@@ -159,7 +170,8 @@ def task(pipe, arg):
                     pipe_s.send_multipart(['EXIT', e.peer_name(), str(len(peers))])
 
                 elif msg_type == 'EVASIVE':
-                    logger.debug('EVASIVE {}'.format(e.peer_name()))
+                    if TRACE or TRACE_EVASIVE:
+                        logger.debug('EVASIVE {}'.format(e.peer_name()))
 
                 else:
                     logger.warn('unknown message type: {}'.format(msg_type))
