@@ -179,10 +179,14 @@ class Client(object):
         self.actor.send_multipart(['JOIN', group.encode('utf-8')])
 
     def shout(self, group, message):
+        if isinstance(message, str):
+            message = message.decode('utf-8')
         self.actor.send_multipart(['SHOUT', group.encode('utf-8'), message.encode('utf-8')])
 
     def whisper(self, message, address):
         logger.debug('sending whisper to %s' % address)
+        if isinstance(message, str):
+            message = message.decode('utf-8')
         self.actor.send_multipart(['WHISPER', address, message.encode('utf-8')])
         logger.debug('message sent via whisper')
 
