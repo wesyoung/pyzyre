@@ -3,6 +3,7 @@ import pytest
 from zmq.eventloop import ioloop
 from pyzyre.client import Client
 from pyzyre._client_task import task
+from czmq import Zcert
 import netifaces as ni
 
 from time import sleep
@@ -48,6 +49,17 @@ def test_client_beacon(iface):
 
     # cleanup
     sleep(1)
+
+
+def test_client_beacon_curve(iface):
+    cert = Zcert()
+    assert(cert.public_txt())
+
+    c1 = Client(task=task, verbose='1', cert=Zcert())
+    c1.start_zyre()
+    sleep(2)
+
+    c1.stop_zyre()
 
 
 def test_client_gossip(iface):

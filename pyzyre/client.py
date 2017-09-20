@@ -65,6 +65,7 @@ class Client(object):
         self.beacon = kwargs.get('beacon')
         self.gossip_connect = kwargs.get('gossip_connect', GOSSIP_CONNECT)
         self.endpoint = kwargs.get('endpoint', ENDPOINT)
+        self.cert = kwargs.get('cert')
 
         self.name = kwargs.get('name', NODE_NAME)
         if not self.name:
@@ -157,6 +158,10 @@ class Client(object):
 
         if self.endpoint:
             actor_args.append('endpoint=%s' % self.endpoint)
+
+        if self.cert:
+            actor_args.append('publickey=%s' % self.cert.public_txt)
+            actor_args.append('secretkey=%s' % self.cert.secret_txt)
 
         actor_args = ','.join(actor_args)
         self.actor_args = create_string_buffer(actor_args)

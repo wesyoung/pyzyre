@@ -1,7 +1,7 @@
 from zyre import Zyre, ZyreEvent
 import zmq
 import logging
-from czmq import Zsock, string_at, Zmsg
+from czmq import Zsock, string_at, Zmsg, Zcert
 import names
 import uuid
 from pyzyre.constants import ZYRE_GROUP
@@ -44,6 +44,10 @@ def task(pipe, arg):
     if args.get('endpoint'):
         logger.info('setting endpoint: {}'.format(args['endpoint']))
         n.set_endpoint(args['endpoint'])
+
+    if args.get('publickey'):
+        cert = Zcert.new_from_txt(args['publickey'], args['secretkey'])
+        n.set_zcert(cert)
 
     if not args.get('beacon'):
         logger.info('setting up gossip')

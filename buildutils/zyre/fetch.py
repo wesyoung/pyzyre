@@ -25,6 +25,10 @@ libzyre_url = "https://github.com/zeromq/zyre/archive/v{vs}.tar.gz".format(
 )
 libzyre_checksum = "sha256:b978a999947ddb6722d956db2427869b313225e50518c4fbbf960a68109e3e91"
 
+if os.getenv("PYZYRE_BUILD_MASTER", False) == '1':
+    libzyre_url = "https://github.com/zeromq/zyre/archive/master.tar.gz"
+
+
 HERE = os.path.dirname(__file__)
 ROOT = os.path.dirname(HERE)
 
@@ -63,6 +67,9 @@ def fetch_archive(savedir, url, fname, checksum, force=False):
     if os.path.exists(dest) and not force:
         info("already have %s" % dest)
         digest = checksum_file(scheme, fname)
+        # skip digest check if we're using master... used in testing new builds
+        if libzyre_url == 'https://github.com/zeromq/zyre/archive/master.tar.gz':
+            return dest
         if digest == digest_ref:
             return dest
         else:
@@ -76,7 +83,7 @@ def fetch_archive(savedir, url, fname, checksum, force=False):
     with open(dest, 'wb') as f:
         f.write(req.read())
     digest = checksum_file(scheme, dest)
-    if digest != digest_ref:
+    if digest != digest_ref and libzyre_url != 'https://github.com/zeromq/zyre/archive/master.tar.gz':
         fatal("%s %s mismatch:\nExpected: %s\nActual  : %s" % (
             dest, scheme, digest_ref, digest))
     return dest
