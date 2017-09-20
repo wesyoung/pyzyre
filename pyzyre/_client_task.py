@@ -58,7 +58,11 @@ def task(pipe, arg):
             n.gossip_bind(args['gossip_bind'])
         else:
             logger.info('connecting to gossip group: {}'.format(args['gossip_connect']))
-            n.gossip_connect(args['gossip_connect'])
+            if args.get('gossip_publickey'):
+                logger.debug('connecting to gossip using CURVE')
+                n.gossip_connect_curve(args['gossip_publickey'], args['gossip_connect'])
+            else:
+                n.gossip_connect(args['gossip_connect'])
 
     poller = zmq.Poller()
 
@@ -94,6 +98,7 @@ def task(pipe, arg):
 
     peers = {}
     terminated = False
+    # TODO- catch SIGINT
     while not terminated:
         items = dict(poller.poll())
 

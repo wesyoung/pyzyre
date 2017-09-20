@@ -66,6 +66,9 @@ class Client(object):
         self.gossip_connect = kwargs.get('gossip_connect', GOSSIP_CONNECT)
         self.endpoint = kwargs.get('endpoint', ENDPOINT)
         self.cert = kwargs.get('cert')
+        self.gossip_publickey = kwargs.get('gossip_publickey')
+
+        pprint(kwargs)
 
         self.name = kwargs.get('name', NODE_NAME)
         if not self.name:
@@ -164,6 +167,9 @@ class Client(object):
             actor_args.append('publickey=%s' % self.cert.public_txt())
             actor_args.append('secretkey=%s' % self.cert.secret_txt())
 
+        if self.gossip_publickey:
+            actor_args.append('gossip_publickey=%s' % self.gossip_publickey)
+
         actor_args = ','.join(actor_args)
         self.actor_args = create_string_buffer(actor_args)
 
@@ -260,8 +266,9 @@ def main():
     p.add_argument('-d', '--debug', help='enable debugging', action='store_true')
 
     p.add_argument('--curve', help="enable CURVE (TLS)", action="store_true")
-    p.add_argument('--curve-publickey', help="specify CURVE public key")
-    p.add_argument('--curve-secretkey', help="specify CURVE secret key")
+    p.add_argument('--publickey', help="specify CURVE public key")
+    p.add_argument('--secretkey', help="specify CURVE secret key")
+    p.add_argument('--gossip-publickey')
 
     p.add_argument('--group', default=ZYRE_GROUP)
 
@@ -284,7 +291,9 @@ def main():
 
     cert = None
     auth = None
-    if args.curve:
+    gossip_publickey = args.gossip_publickey
+
+    if args.curve or args.publickey or args.gossip_publickey:
         from zmq.auth.thread import ThreadAuthenticator
         ctx = zmq.Context.instance()
         auth = ThreadAuthenticator(ctx, log=logger)
@@ -294,12 +303,12 @@ def main():
 
         logger.debug('enabling curve...')
         cert = Zcert()
-        if args.curve_publickey:
-            if not args.curve_secretkey:
+        if args.publickey:
+            if not args.secretkey:
                 logger.error("CURVE Secret Key required")
                 raise SystemExit
 
-            cert = Zcert.new_from_txt(args.curve_publickey, args.curve_secretkey)
+            cert = Zcert.new_from_txt(args.publickey, args.secretkey)
 
     client = Client(
         group=args.group,
@@ -309,7 +318,8 @@ def main():
         endpoint=args.endpoint,
         verbose=verbose,
         interface=args.interface,
-        cert=cert
+        cert=cert,
+        gossip_publickey=gossip_publickey
     )
 
     def on_stdin(s, e):
