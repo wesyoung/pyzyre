@@ -9,6 +9,8 @@ import netifaces as ni
 from time import sleep
 from pprint import pprint
 import zmq
+import zmq.auth
+from zmq.auth.thread import ThreadAuthenticator
 
 ioloop.install()
 
@@ -25,10 +27,10 @@ def iface():
 
 def test_client_beacon(iface):
     # test with multi-process framework..
-    c1 = Client(task=task, verbose='1')
+    c1 = Client(interface=iface, task=task, verbose='1')
     c1.start_zyre()
 
-    c2 = Client(task=task, verbose='1')
+    c2 = Client(interface=iface, task=task, verbose='1')
     c2.start_zyre()
 
     sleep(0.01)
@@ -48,18 +50,49 @@ def test_client_beacon(iface):
     loop.remove_handler(c1.actor)
 
     # cleanup
-    sleep(1)
+    sleep(2)
 
 
 def test_client_beacon_curve(iface):
-    cert = Zcert()
-    assert(cert.public_txt())
+    ctx = zmq.Context.instance()
+    auth = ThreadAuthenticator(ctx)
+    auth.start()
 
-    c1 = Client(task=task, verbose='1', cert=Zcert())
+    # Tell authenticator to use the certificate in a directory
+    auth.configure_curve(domain='*', location=zmq.auth.CURVE_ALLOW_ANY)
+
+    cert1 = Zcert()
+    assert(cert1.public_txt())
+
+    c1 = Client(interace=iface, task=task, verbose='1', cert=cert1)
     c1.start_zyre()
-    sleep(2)
+
+    cert2 = Zcert()
+    assert(cert2.public_txt())
+
+    c2 = Client(interface=iface, task=task, verbose='1', cert=cert2)
+    c2.start_zyre()
+
+    sleep(0.01)
+
+    loop = ioloop.IOLoop.instance()
+    loop.add_handler(c1.actor, c1.handle_message, zmq.POLLIN)
+
+    def test_fcn():
+        c2.shout('ZYRE', 'TEST')
+        sleep(1)
+
+    loop.run_sync(test_fcn)
+
+    loop.remove_handler(c1.actor)
 
     c1.stop_zyre()
+    c2.stop_zyre()
+
+    auth.stop()
+
+    # cleanup
+    sleep(2)
 
 
 def test_client_gossip(iface):

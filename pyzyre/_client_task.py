@@ -6,6 +6,7 @@ import names
 import uuid
 from pyzyre.constants import ZYRE_GROUP
 import os
+from pprint import pprint
 from pyzyre import color
 
 logger = logging.getLogger('')
@@ -19,7 +20,7 @@ TRACE = os.getenv('ZYRE_TRACE')
 
 def task(pipe, arg):
     args = string_at(arg)
-    args = dict(item.split("=") for item in args.split(","))
+    args = dict(item.split("=", 1) for item in args.split(","))
 
     name = args.get('name')
     if not name:
@@ -47,6 +48,7 @@ def task(pipe, arg):
 
     if args.get('publickey'):
         cert = Zcert.new_from_txt(args['publickey'], args['secretkey'])
+        logger.debug('setting cert: %s %s', cert.public_txt(), cert.secret_txt())
         n.set_zcert(cert)
 
     if not args.get('beacon'):
