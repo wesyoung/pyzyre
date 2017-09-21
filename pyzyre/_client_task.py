@@ -42,14 +42,13 @@ def task(pipe, arg):
         logger.setLevel(logging.DEBUG)
         n.set_verbose()
 
+    if args.get('publickey'):
+        cert = Zcert.new_from_txt(args['publickey'], args['secretkey'])
+        n.set_zcert(cert)
+
     if args.get('endpoint'):
         logger.info('setting endpoint: {}'.format(args['endpoint']))
         n.set_endpoint(args['endpoint'])
-
-    if args.get('publickey'):
-        cert = Zcert.new_from_txt(args['publickey'], args['secretkey'])
-        logger.debug('setting cert: %s %s', cert.public_txt(), cert.secret_txt())
-        n.set_zcert(cert)
 
     if not args.get('beacon'):
         logger.info('setting up gossip')
@@ -59,7 +58,6 @@ def task(pipe, arg):
         else:
             logger.info('connecting to gossip group: {}'.format(args['gossip_connect']))
             if args.get('gossip_publickey'):
-                logger.debug('connecting to gossip using CURVE')
                 n.gossip_connect_curve(args['gossip_publickey'], args['gossip_connect'])
             else:
                 n.gossip_connect(args['gossip_connect'])

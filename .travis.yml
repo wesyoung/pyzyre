@@ -18,8 +18,7 @@ before_install:
   - pip install -r dev_requirements.txt
 
 install:
-  - python setup.py develop
-  - python setup.py build_ext
+  - PYZYRE_BUILD_MASTER=1 python setup.py develop
   - python setup.py sdist
 
 script:

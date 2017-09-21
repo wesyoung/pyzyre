@@ -68,8 +68,6 @@ class Client(object):
         self.cert = kwargs.get('cert')
         self.gossip_publickey = kwargs.get('gossip_publickey')
 
-        pprint(kwargs)
-
         self.name = kwargs.get('name', NODE_NAME)
         if not self.name:
             self.name = '{}_{}'.format(names.get_first_name().lower(), names.get_last_name().lower())
@@ -104,6 +102,7 @@ class Client(object):
 
         self.gossip_bind = resolve_gossip(GOSSIP_PORT, self.gossip_bind)
         logger.debug('gossip-bind: %s' % self.gossip_bind)
+        logger.debug("ENDPOINT: %s" % self.endpoint)
 
         if not self.endpoint:
             if self.interface:
