@@ -143,7 +143,7 @@ class Configure(build_ext):
 
         czmq_sources = []
         for f in glob(pjoin(bundledir, 'czmq', 'src', '*.c')):
-            if f not in ['bundled/czmq/src/czmq_selftest.c', 'bundled/czmq/src/test_zgossip.c']:
+            if f not in ['bundled/czmq/src/czmq_selftest.c', 'bundled/czmq/src/zsp.c'] and 'test_' not in f:
                 czmq_sources.append(f)
 
         czmq_sources.append(pjoin('buildutils', 'czmq', 'initlibczmq.c'))

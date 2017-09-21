@@ -1,11 +1,12 @@
 from zyre import Zyre, ZyreEvent
 import zmq
 import logging
-from czmq import Zsock, string_at, Zmsg
+from czmq import Zsock, string_at, Zmsg, Zcert
 import names
 import uuid
 from pyzyre.constants import ZYRE_GROUP
 import os
+from pprint import pprint
 from pyzyre import color
 
 logger = logging.getLogger('')
@@ -19,7 +20,7 @@ TRACE = os.getenv('ZYRE_TRACE')
 
 def task(pipe, arg):
     args = string_at(arg)
-    args = dict(item.split("=") for item in args.split(","))
+    args = dict(item.split("=", 1) for item in args.split(","))
 
     name = args.get('name')
     if not name:
@@ -41,6 +42,10 @@ def task(pipe, arg):
         logger.setLevel(logging.DEBUG)
         n.set_verbose()
 
+    if args.get('publickey'):
+        cert = Zcert.new_from_txt(args['publickey'], args['secretkey'])
+        n.set_zcert(cert)
+
     if args.get('endpoint'):
         logger.info('setting endpoint: {}'.format(args['endpoint']))
         n.set_endpoint(args['endpoint'])
@@ -52,7 +57,10 @@ def task(pipe, arg):
             n.gossip_bind(args['gossip_bind'])
         else:
             logger.info('connecting to gossip group: {}'.format(args['gossip_connect']))
-            n.gossip_connect(args['gossip_connect'])
+            if args.get('gossip_publickey'):
+                n.gossip_connect_curve(args['gossip_publickey'], args['gossip_connect'])
+            else:
+                n.gossip_connect(args['gossip_connect'])
 
     poller = zmq.Poller()
 
@@ -88,6 +96,7 @@ def task(pipe, arg):
 
     peers = {}
     terminated = False
+    # TODO- catch SIGINT
     while not terminated:
         items = dict(poller.poll())
 

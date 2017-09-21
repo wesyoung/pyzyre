@@ -26,6 +26,9 @@ libczmq_url = "https://github.com/zeromq/czmq/archive/v{vs}.tar.gz".format(
 )
 libczmq_checksum = "sha256:794f80af7392ec8d361ad69646fc20aaa284d23fef92951334009771a732c810"
 
+if os.getenv("PYZYRE_BUILD_MASTER", False) == '1':
+    libczmq_url = "https://github.com/zeromq/czmq/archive/master.tar.gz"
+
 
 HERE = os.path.dirname(__file__)
 ROOT = os.path.dirname(HERE)
@@ -64,9 +67,9 @@ def fetch_archive(savedir, url, fname, checksum, force=False):
 
     if os.path.exists(dest) and not force:
         info("already have %s" % dest)
-        if not ENABLE_CHECKSUM:
-            return dest
         digest = checksum_file(scheme, fname)
+        if libczmq_url == 'https://github.com/zeromq/czmq/archive/master.tar.gz':
+            return dest
         if digest == digest_ref:
             return dest
         else:
@@ -82,7 +85,7 @@ def fetch_archive(savedir, url, fname, checksum, force=False):
     digest = checksum_file(scheme, dest)
     if not ENABLE_CHECKSUM:
         return dest
-    if digest != digest_ref:
+    if digest != digest_ref and libczmq_url != 'https://github.com/zeromq/czmq/archive/master.tar.gz':
         fatal("%s %s mismatch:\nExpected: %s\nActual  : %s" % (
             dest, scheme, digest_ref, digest))
     return dest

@@ -7,9 +7,9 @@ python:
   - 2.7
 
 before_install:
-  - wget -nv http://download.opensuse.org/repositories/home:wesyoung:zeromq/xUbuntu_14.04/Release.key -O Release.key
+  - wget -nv http://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-draft//xUbuntu_14.04/Release.key -O Release.key
   - sudo apt-key add - < Release.key
-  - sudo sh -c "echo 'deb http://download.opensuse.org/repositories/home:/wesyoung:/zeromq/xUbuntu_14.04/ /' > /etc/apt/sources.list.d/zeromq.list"
+  - sudo sh -c "echo 'deb http://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-draft/xUbuntu_14.04/ /' > /etc/apt/sources.list.d/zeromq.list"
   - sudo apt-get update
   - sudo apt-get install uuid-dev libuuid1 libzyre-dev
   - pip install pip --upgrade
@@ -18,14 +18,14 @@ before_install:
   - pip install -r dev_requirements.txt
 
 install:
-  - python setup.py develop
+  - PYZYRE_BUILD_MASTER=1 python setup.py develop
   - python setup.py sdist
 
 script:
   - python -c "import pyzyre; print(pyzyre.__version__)"
   - python -c "import zyre; print(zyre.Zyre)"
   - python -c "import czmq; print(czmq.Zactor)"
-  - python setup.py test
+  - ZYRE_TRACE=1 python setup.py test
 
 notifications:
   email:
