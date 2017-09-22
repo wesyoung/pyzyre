@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 import zmq
 import logging
-from czmq import Zactor, zactor_fn, create_string_buffer, Zcert
+from czmq import Zactor, zactor_fn, create_string_buffer, Zcert, lib
 import os
 import os.path
 from pyzyre.utils import resolve_gossip, resolve_endpoint
@@ -11,9 +11,11 @@ from ._client_task import task as client_task
 import sys
 from zmq.eventloop import ioloop
 from time import sleep
-from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_GROUP, LOG_FORMAT, PYVERSION, GOSSIP_CONNECT, ENDPOINT
+from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_GROUP, LOG_FORMAT, PYVERSION, GOSSIP_CONNECT, ENDPOINT, \
+    CURVE_ALLOW_ANY
 
 NODE_NAME = os.getenv('ZYRE_NODE_NAME')
+ZAUTH_TRACE = os.getenv('ZAUTH_TRACE', False)
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +88,23 @@ class Client(object):
             self.endpoint = False
             self.beacon = True
 
+        if self.cert:
+            self._init_zauth()
+
         self._init_zyre()
+
+    def _init_zauth(self, allow=CURVE_ALLOW_ANY):
+        logger.debug("spinning up zauth..")
+        self._auth = Zactor(zactor_fn(lib.zauth), None)
+
+        if ZAUTH_TRACE:
+            logger.debug('turning on auth verbose')
+            self._auth.sock().send(b"s", b"VERBOSE")
+            self._auth.sock().wait()
+
+        logger.debug("configuring Zauth...")
+        self._auth.sock().send(b"ss", b"CURVE", allow, None)
+        self._auth.sock().wait()
 
     def _init_beacon(self):
         logger.debug(self.interface)
@@ -184,6 +202,9 @@ class Client(object):
         m = self.actor.recv_multipart()
         sleep(0.01)
         del self._actor
+
+        if self._auth:
+            del self._auth
 
     def join(self, group):
         logger.debug('sending join')
@@ -289,17 +310,9 @@ def main():
     loop = ioloop.IOLoop.instance()
 
     cert = None
-    auth = None
     gossip_publickey = args.gossip_publickey
 
     if args.curve or args.publickey or args.gossip_publickey:
-        from zmq.auth.thread import ThreadAuthenticator
-        ctx = zmq.Context.instance()
-        auth = ThreadAuthenticator(ctx, log=logger)
-        auth.start()
-        # Tell authenticator to use the certificate in a directory
-        auth.configure_curve(domain='*', location=zmq.auth.CURVE_ALLOW_ANY)
-
         logger.debug('enabling curve...')
         cert = Zcert()
         if args.publickey:
@@ -345,8 +358,6 @@ def main():
 
     client.stop_zyre()
 
-    if auth:
-        auth.stop()
 
 if __name__ == '__main__':
     main()

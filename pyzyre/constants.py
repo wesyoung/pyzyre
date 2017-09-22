@@ -14,3 +14,5 @@ GOSSIP_CONNECT = os.getenv('ZYRE_GOSSIP_CONNECT')
 ENDPOINT = os.getenv('ZYRE_ENDPOINT')
 
 LOG_FORMAT = '%(asctime)s - %(levelname)s - %(name)s[%(lineno)s] - %(message)s'
+
+CURVE_ALLOW_ANY = "*"
