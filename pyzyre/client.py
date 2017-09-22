@@ -69,6 +69,7 @@ class Client(object):
         self.endpoint = kwargs.get('endpoint', ENDPOINT)
         self.cert = kwargs.get('cert')
         self.gossip_publickey = kwargs.get('gossip_publickey')
+        self.zauth_curve_allow = kwargs.get('zauth_curve_allow')
 
         self.name = kwargs.get('name', NODE_NAME)
         if not self.name:
@@ -89,7 +90,7 @@ class Client(object):
             self.beacon = True
 
         if self.cert:
-            self._init_zauth()
+            self._init_zauth(allow=self.zauth_curve_allow)
 
         self._init_zyre()
 
@@ -289,6 +290,8 @@ def main():
     p.add_argument('--publickey', help="specify CURVE public key")
     p.add_argument('--secretkey', help="specify CURVE secret key")
     p.add_argument('--gossip-publickey')
+    p.add_argument('--zauth-curve-allow', help="specify zauth curve allow [default %(default)s]",
+                   default=CURVE_ALLOW_ANY)
 
     p.add_argument('--group', default=ZYRE_GROUP)
 
@@ -331,7 +334,8 @@ def main():
         verbose=verbose,
         interface=args.interface,
         cert=cert,
-        gossip_publickey=gossip_publickey
+        gossip_publickey=gossip_publickey,
+        zauth_curve_allow=args.zauth_curve_allow
     )
 
     def on_stdin(s, e):
