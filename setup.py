@@ -239,7 +239,7 @@ setup(
         'cython>=0.16',
         'names',
         'tornado',
-        'pyzmq>=16.0.1'
+        'pyzmq>=16.0.1,<17'
     ],
     classifiers=[
         'Intended Audience :: Developers',

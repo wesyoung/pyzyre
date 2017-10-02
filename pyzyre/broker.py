@@ -75,7 +75,7 @@ def main():
         endpoint=args.endpoint,
         cert=cert,
         gossip_publickey=gossip_publickey,
-        zauth_curve_allow=args.zauth_curve_allow
+        zauth=args.zauth_curve_allow
     )
 
     client.start_zyre()

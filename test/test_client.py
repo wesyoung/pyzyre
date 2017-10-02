@@ -54,23 +54,21 @@ def test_client_beacon(iface):
 
 
 def test_client_beacon_curve(iface):
-    ctx = zmq.Context.instance()
-    auth = ThreadAuthenticator(ctx)
-    auth.start()
-
-    # Tell authenticator to use the certificate in a directory
-    auth.configure_curve(domain='*', location=zmq.auth.CURVE_ALLOW_ANY)
+    #zauth = Client()._zauth()
+    zauth = None
 
     cert1 = Zcert()
     assert(cert1.public_txt())
 
-    c1 = Client(interace=iface, task=task, verbose='1', cert=cert1)
+    c1 = Client(interace=iface, task=task, verbose='1', cert=cert1, zauth=zauth)
     c1.start_zyre()
+
+    sleep(0.01)
 
     cert2 = Zcert()
     assert(cert2.public_txt())
 
-    c2 = Client(interface=iface, task=task, verbose='1', cert=cert2)
+    c2 = Client(interface=iface, task=task, verbose='1', cert=cert2, zauth=zauth)
     c2.start_zyre()
 
     sleep(0.01)
@@ -88,8 +86,6 @@ def test_client_beacon_curve(iface):
 
     c1.stop_zyre()
     c2.stop_zyre()
-
-    auth.stop()
 
     # cleanup
     sleep(2)

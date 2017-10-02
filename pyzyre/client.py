@@ -69,14 +69,13 @@ class Client(object):
         self.endpoint = kwargs.get('endpoint', ENDPOINT)
         self.cert = kwargs.get('cert')
         self.gossip_publickey = kwargs.get('gossip_publickey')
-        self.zauth_curve_allow = kwargs.get('zauth_curve_allow')
+        self.zauth = kwargs.get('zauth')
 
         self.name = kwargs.get('name', NODE_NAME)
         if not self.name:
             self.name = '{}_{}'.format(names.get_first_name().lower(), names.get_last_name().lower())
 
         self.actor = None
-        self._auth = None
         self.task = zactor_fn(client_task)
         self.verbose = kwargs.get('verbose')
 
@@ -90,26 +89,29 @@ class Client(object):
             self.endpoint = False
             self.beacon = True
 
-        if self.cert:
-            self._init_zauth(allow=self.zauth_curve_allow)
+        if isinstance(self.zauth, str):
+            self.zauth = self._zauth(self.zauth)
 
         self._init_zyre()
 
-    def _init_zauth(self, allow=CURVE_ALLOW_ANY):
+    def _zauth(self, allow=CURVE_ALLOW_ANY):
         logger.debug("spinning up zauth..")
-        self._auth = Zactor(zactor_fn(lib.zauth), None)
+
+        zauth = Zactor(zactor_fn(lib.zauth), None)
 
         if ZAUTH_TRACE:
             logger.debug('turning on auth verbose')
-            self._auth.sock().send(b"s", b"VERBOSE")
-            self._auth.sock().wait()
+            zauth.sock().send(b"s", b"VERBOSE")
+            zauth.sock().wait()
 
-        logger.debug("configuring Zauth...")
-        self._auth.sock().send(b"ss", b"CURVE", allow, None)
-        self._auth.sock().wait()
+        if allow:
+            logger.debug("configuring Zauth...")
+            zauth.sock().send(b"ss", b"CURVE", allow, None)
+            zauth.sock().wait()
+
+        return zauth
 
     def _init_beacon(self):
-        logger.debug(self.interface)
         os.environ["ZSYS_INTERFACE"] = self.interface
 
     def _init_gossip_bind(self):
@@ -205,8 +207,8 @@ class Client(object):
         sleep(0.01)
         del self._actor
 
-        if self._auth:
-            del self._auth
+        if self.zauth:
+            del self.zauth
 
     def join(self, group):
         logger.debug('sending join')
@@ -339,7 +341,7 @@ def main():
         interface=args.interface,
         cert=cert,
         gossip_publickey=gossip_publickey,
-        zauth_curve_allow=args.zauth_curve_allow
+        zauth=args.zauth_curve_allow
     )
 
     def on_stdin(s, e):
