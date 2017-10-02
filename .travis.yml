@@ -3,7 +3,7 @@ dist: trusty
 language: python
 cache: apt pip
 env:
-    - PYZYRE_BUILD_MASETER=1
+    - PYZYRE_BUILD_MASTER=1
 
 python:
   - 2.7
