@@ -2,6 +2,8 @@ sudo: required
 dist: trusty
 language: python
 cache: apt pip
+env:
+    - PYZYRE_BUILD_MASETER=1
 
 python:
   - 2.7
@@ -18,7 +20,7 @@ before_install:
   - pip install -r dev_requirements.txt
 
 install:
-  - PYZYRE_BUILD_MASTER=1 python setup.py develop
+  - python setup.py develop
   - python setup.py sdist
 
 script:

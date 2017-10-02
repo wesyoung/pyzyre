@@ -3,8 +3,9 @@ import zmq
 import logging
 from pyzyre.utils import resolve_endpoint
 from zmq.eventloop import ioloop
-from pyzyre.constants import SERVICE_PORT, ZYRE_GROUP, LOG_FORMAT, GOSSIP_PORT
+from pyzyre.constants import SERVICE_PORT, ZYRE_GROUP, LOG_FORMAT, GOSSIP_PORT, CURVE_ALLOW_ANY
 from pyzyre.client import Client, DefaultHandler
+from czmq import Zcert
 
 
 logger = logging.getLogger(__name__)
@@ -28,6 +29,13 @@ def main():
 
     p.add_argument('--group', help="group to join [default %(default)s]", default=ZYRE_GROUP)
 
+    p.add_argument('--curve', help="enable CURVE (TLS)", action="store_true")
+    p.add_argument('--publickey', help="specify CURVE public key")
+    p.add_argument('--secretkey', help="specify CURVE secret key")
+    p.add_argument('--gossip-publickey')
+    p.add_argument('--zauth-curve-allow', help="specify zauth curve allow [default %(default)s]",
+                   default=CURVE_ALLOW_ANY)
+
     args = p.parse_args()
 
     loglevel = logging.INFO
@@ -40,6 +48,19 @@ def main():
     logging.getLogger('').addHandler(console)
     logging.propagate = False
 
+    cert = None
+    gossip_publickey = args.gossip_publickey
+
+    if args.curve or args.publickey or args.gossip_publickey:
+        logger.debug('enabling curve...')
+        cert = Zcert()
+        if args.publickey:
+            if not args.secretkey:
+                logger.error("CURVE Secret Key required")
+                raise SystemExit
+
+            cert = Zcert.new_from_txt(args.publickey, args.secretkey)
+
     ioloop.install()
     loop = ioloop.IOLoop.instance()
 
@@ -49,6 +70,9 @@ def main():
         loop=loop,
         gossip_bind=args.gossip_bind,
         endpoint=args.endpoint,
+        cert=cert,
+        gossip_publickey=gossip_publickey,
+        zauth_curve_allow=args.zauth_curve_allow
     )
 
     client.start_zyre()
