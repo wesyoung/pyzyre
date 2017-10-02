@@ -326,6 +326,9 @@ def main():
 
             cert = Zcert.new_from_txt(args.publickey, args.secretkey)
 
+        logger.debug("Public Key: %s" % cert.public_txt())
+        logger.debug("Secret Key: %s" % cert.secret_txt())
+
     client = Client(
         group=args.group,
         loop=loop,
