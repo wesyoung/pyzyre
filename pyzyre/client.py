@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 import zmq
 import logging
-from czmq import Zactor, zactor_fn, create_string_buffer, Zcert
+from czmq import Zactor, zactor_fn, create_string_buffer, Zcert, lib
 import os
 import os.path
 from pyzyre.utils import resolve_gossip, resolve_endpoint
@@ -11,9 +11,11 @@ from ._client_task import task as client_task
 import sys
 from zmq.eventloop import ioloop
 from time import sleep
-from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_GROUP, LOG_FORMAT, PYVERSION, GOSSIP_CONNECT, ENDPOINT
+from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_GROUP, LOG_FORMAT, PYVERSION, GOSSIP_CONNECT, ENDPOINT, \
+    CURVE_ALLOW_ANY
 
 NODE_NAME = os.getenv('ZYRE_NODE_NAME')
+ZAUTH_TRACE = os.getenv('ZAUTH_TRACE', False)
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +69,7 @@ class Client(object):
         self.endpoint = kwargs.get('endpoint', ENDPOINT)
         self.cert = kwargs.get('cert')
         self.gossip_publickey = kwargs.get('gossip_publickey')
+        self.zauth_curve_allow = kwargs.get('zauth_curve_allow')
 
         self.name = kwargs.get('name', NODE_NAME)
         if not self.name:
@@ -86,7 +89,23 @@ class Client(object):
             self.endpoint = False
             self.beacon = True
 
+        if self.cert:
+            self._init_zauth(allow=self.zauth_curve_allow)
+
         self._init_zyre()
+
+    def _init_zauth(self, allow=CURVE_ALLOW_ANY):
+        logger.debug("spinning up zauth..")
+        self._auth = Zactor(zactor_fn(lib.zauth), None)
+
+        if ZAUTH_TRACE:
+            logger.debug('turning on auth verbose')
+            self._auth.sock().send(b"s", b"VERBOSE")
+            self._auth.sock().wait()
+
+        logger.debug("configuring Zauth...")
+        self._auth.sock().send(b"ss", b"CURVE", allow, None)
+        self._auth.sock().wait()
 
     def _init_beacon(self):
         logger.debug(self.interface)
@@ -185,6 +204,9 @@ class Client(object):
         sleep(0.01)
         del self._actor
 
+        if self._auth:
+            del self._auth
+
     def join(self, group):
         logger.debug('sending join')
         self.actor.send_multipart(['JOIN', group.encode('utf-8')])
@@ -268,6 +290,8 @@ def main():
     p.add_argument('--publickey', help="specify CURVE public key")
     p.add_argument('--secretkey', help="specify CURVE secret key")
     p.add_argument('--gossip-publickey')
+    p.add_argument('--zauth-curve-allow', help="specify zauth curve allow [default %(default)s]",
+                   default=CURVE_ALLOW_ANY)
 
     p.add_argument('--group', default=ZYRE_GROUP)
 
@@ -289,17 +313,9 @@ def main():
     loop = ioloop.IOLoop.instance()
 
     cert = None
-    auth = None
     gossip_publickey = args.gossip_publickey
 
     if args.curve or args.publickey or args.gossip_publickey:
-        from zmq.auth.thread import ThreadAuthenticator
-        ctx = zmq.Context.instance()
-        auth = ThreadAuthenticator(ctx, log=logger)
-        auth.start()
-        # Tell authenticator to use the certificate in a directory
-        auth.configure_curve(domain='*', location=zmq.auth.CURVE_ALLOW_ANY)
-
         logger.debug('enabling curve...')
         cert = Zcert()
         if args.publickey:
@@ -318,7 +334,8 @@ def main():
         verbose=verbose,
         interface=args.interface,
         cert=cert,
-        gossip_publickey=gossip_publickey
+        gossip_publickey=gossip_publickey,
+        zauth_curve_allow=args.zauth_curve_allow
     )
 
     def on_stdin(s, e):
@@ -345,8 +362,6 @@ def main():
 
     client.stop_zyre()
 
-    if auth:
-        auth.stop()
 
 if __name__ == '__main__':
     main()
