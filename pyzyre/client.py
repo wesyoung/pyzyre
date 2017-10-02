@@ -76,6 +76,7 @@ class Client(object):
             self.name = '{}_{}'.format(names.get_first_name().lower(), names.get_last_name().lower())
 
         self.actor = None
+        self._auth = None
         self.task = zactor_fn(client_task)
         self.verbose = kwargs.get('verbose')
 

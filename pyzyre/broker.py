@@ -61,6 +61,9 @@ def main():
 
             cert = Zcert.new_from_txt(args.publickey, args.secretkey)
 
+        logger.debug("Public Key: %s" % cert.public_txt())
+        logger.debug("Secret Key: %s" % cert.secret_txt())
+
     ioloop.install()
     loop = ioloop.IOLoop.instance()
 
