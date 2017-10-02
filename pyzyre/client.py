@@ -101,7 +101,7 @@ class Client(object):
 
         if ZAUTH_TRACE:
             logger.debug('turning on auth verbose')
-            zauth.sock().send(b"s", b"VERBOSE")
+            zauth.sock().send(b"s", b"VERBOSE", None)
             zauth.sock().wait()
 
         if allow:
