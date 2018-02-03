@@ -39,6 +39,7 @@ def main():
     p.add_argument('--gossip-cert', help="specify gossip cert path")
     p.add_argument('--cert', help="specify local cert path")
     p.add_argument('--curve', help="enable CURVE (TLS)", action="store_true")
+    p.add_argument('--gossip-publickey', default=GOSSIP_PUBLIC_KEY)
     p.add_argument('--publickey', help="specify CURVE public key [default %(default)s]", default=PUBLIC_KEY)
     p.add_argument('--secretkey', help="specify CURVE secret key [default %(default)s]", default=SECRET_KEY)
     p.add_argument('--zauth-curve-allow', help="specify zauth curve allow [default %(default)s]",
@@ -114,7 +115,7 @@ def main():
         verbose=verbose,
         interface=args.interface,
         cert=cert,
-        gossip_publickey=args.publickey,
+        gossip_publickey=args.gossip_publickey,
         zauth=args.zauth_curve_allow
     )
 

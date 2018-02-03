@@ -3,7 +3,8 @@ import zmq
 import logging
 from pyzyre.utils import resolve_endpoint
 from zmq.eventloop import ioloop
-from pyzyre.constants import SERVICE_PORT, ZYRE_GROUP, LOG_FORMAT, GOSSIP_PORT, CURVE_ALLOW_ANY, PUBLIC_KEY, SECRET_KEY
+from pyzyre.constants import SERVICE_PORT, ZYRE_GROUP, LOG_FORMAT, GOSSIP_PORT, CURVE_ALLOW_ANY, PUBLIC_KEY, SECRET_KEY, \
+    GOSSIP_PUBLIC_KEY
 from pyzyre.client import Client, DefaultHandler
 from czmq import Zcert
 
@@ -32,6 +33,7 @@ def main():
     p.add_argument('--gossip-cert', help="specify gossip cert path")
     p.add_argument('--cert', help="specify local cert path")
     p.add_argument('--curve', help="enable CURVE (TLS)", action="store_true")
+    p.add_argument('--gossip-publickey', default=GOSSIP_PUBLIC_KEY)
     p.add_argument('--publickey', help="specify CURVE public key [default %(default)s]", default=PUBLIC_KEY)
     p.add_argument('--secretkey', help="specify CURVE secret key [default %(default)s]", default=SECRET_KEY)
     
@@ -88,7 +90,7 @@ def main():
         gossip_bind=args.gossip_bind,
         endpoint=args.endpoint,
         cert=cert,
-        gossip_publickey=args.publickey,
+        gossip_publickey=args.gossip_publickey,
         zauth=args.zauth_curve_allow
     )
 
