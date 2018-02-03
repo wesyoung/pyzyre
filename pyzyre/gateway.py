@@ -114,7 +114,7 @@ def main():
         verbose=verbose,
         interface=args.interface,
         cert=cert,
-        gossip_publickey=gossip_publickey,
+        gossip_publickey=args.publickey,
         zauth=args.zauth_curve_allow
     )
 
