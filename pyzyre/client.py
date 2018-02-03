@@ -87,6 +87,7 @@ class Client(object):
 
         if self.gossip_bind:
             self.beacon = False
+            self.gossip_connect = False
 
         elif self.gossip_connect:
             self.beacon = False
@@ -222,6 +223,7 @@ class Client(object):
 
         if self.zauth:
             del self.zauth
+            self.zauth = None
 
     def join(self, group):
         logger.debug('sending join')
@@ -264,7 +266,7 @@ class Client(object):
 
         elif m_type == 'ENTER':
             # set teh first node name in case we need it later (gossip)
-            if not self.first_node:
+            if not self.first_node and self.gossip_connect:
                 self.first_node = m[1]
 
             self.handler.on_enter(self, peer=m)
@@ -275,7 +277,7 @@ class Client(object):
 
         elif m_type == 'EXIT':
             peer, peers_remining = m
-            if self.gossip_connect and self.first_node == peer or peers_remining == '0':
+            if self.gossip_connect and peers_remining == '0' or self.first_node == peer:
                 self.parent_loop.remove_handler(self.actor)
                 self.stop_zyre()
                 self.start_zyre()
@@ -316,6 +318,7 @@ def main():
     p.add_argument('--gossip-publickey', help='specify CURVE public key [default %(default)s]', default=GOSSIP_PUBLIC_KEY)
     p.add_argument('--zauth-curve-allow', help="specify zauth curve allow [default %(default)s]",
                    default=CURVE_ALLOW_ANY)
+    p.add_argument('--name')
 
     p.add_argument('--group', default=ZYRE_GROUP)
 
@@ -374,7 +377,8 @@ def main():
         interface=args.interface,
         cert=cert,
         gossip_publickey=args.gossip_publickey,
-        zauth=args.zauth_curve_allow
+        zauth=args.zauth_curve_allow,
+        name=args.name
     )
 
     def on_stdin(s, e):
