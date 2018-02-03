@@ -3,7 +3,7 @@ import zmq
 import logging
 from pyzyre.utils import resolve_endpoint
 from zmq.eventloop import ioloop
-from pyzyre.constants import SERVICE_PORT, ZYRE_GROUP, LOG_FORMAT, GOSSIP_PORT, CURVE_ALLOW_ANY
+from pyzyre.constants import SERVICE_PORT, ZYRE_GROUP, LOG_FORMAT, GOSSIP_PORT, CURVE_ALLOW_ANY, PUBLIC_KEY, SECRET_KEY
 from pyzyre.client import Client, DefaultHandler
 from czmq import Zcert
 
@@ -88,7 +88,7 @@ def main():
         gossip_bind=args.gossip_bind,
         endpoint=args.endpoint,
         cert=cert,
-        gossip_publickey=gossip_publickey,
+        gossip_publickey=args.publickey,
         zauth=args.zauth_curve_allow
     )
 
