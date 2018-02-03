@@ -186,7 +186,7 @@ class DevelopCommand(develop):
     def run(self):
         try:
             cdll.LoadLibrary(zmqlib)
-        except OSError:
+        except OSError as e:
             print(
                 "\nlibzyre.so needs to be installed, for more info checkout:\nhttps://github.com/wesyoung/pyzyre/wiki\n"
             )
@@ -239,7 +239,8 @@ setup(
         'cython>=0.16',
         'names',
         'tornado',
-        'pyzmq>=16.0.1'
+        'pyzmq>=16.0.1,<17',
+        'dnspython>=1.15'
     ],
     classifiers=[
         'Intended Audience :: Developers',

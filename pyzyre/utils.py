@@ -92,3 +92,15 @@ def resolve_gossip(port, address=None):
         address = resolve_endpoint(port, address)
 
     return address
+
+
+def resolve_gossip_bootstrap(server):
+    import dns
+    if ":" in server:
+        server = server.split(":")[0]
+
+    r = dns.resolver.query(server, 'TXT')
+    if len(r) == 0:
+        return False
+
+    return r[0].strings[0]
