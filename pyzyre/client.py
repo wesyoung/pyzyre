@@ -34,6 +34,9 @@ class DefaultHandler(object):
     def on_leave(self, client, peer, group):
         pass
 
+    def on_evasive(self, client, peer):
+        pass
+
     def on_exit(self, client, peer):
         pass
 
@@ -67,6 +70,7 @@ class Client(object):
         self.endpoint = kwargs.get('endpoint', ENDPOINT)
         self.cert = kwargs.get('cert')
         self.gossip_publickey = kwargs.get('gossip_publickey')
+        self.first_node = None
 
         self.name = kwargs.get('name', NODE_NAME)
         if not self.name:
@@ -225,6 +229,10 @@ class Client(object):
             self.handler.on_shout(self, group, peer, address, message)
 
         elif m_type == 'ENTER':
+            # set teh first node name in case we need it later (gossip)
+            if not self.first_node:
+                self.first_node = m[1]
+
             self.handler.on_enter(self, peer=m)
 
         elif m_type == 'WHISPER':
@@ -233,8 +241,7 @@ class Client(object):
 
         elif m_type == 'EXIT':
             peer, peers_remining = m
-            logger.debug(peers_remining)
-            if self.gossip_connect and peers_remining == '0':
+            if self.gossip_connect and self.first_node == peer or peers_remining == '0':
                 self.parent_loop.remove_handler(self.actor)
                 self.stop_zyre()
                 self.start_zyre()
@@ -248,6 +255,10 @@ class Client(object):
         elif m_type == 'LEAVE':
             peer, group = m
             self.handler.on_leave(self, peer, group)
+
+        elif m_type == 'EVASIVE':
+            peer = m
+            self.handler.on_evasive(self, peer)
 
         else:
             logger.warn("unhandled m_type {} rest of message is {}".format(m_type, m))

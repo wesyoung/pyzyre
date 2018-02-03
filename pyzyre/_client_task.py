@@ -182,6 +182,8 @@ def task(pipe, arg):
                     if TRACE or TRACE_EVASIVE:
                         logger.debug('EVASIVE {}'.format(e.peer_name()))
 
+                    pipe_s.send_multipart(['EVASIVE', e.peer_name()])
+
                 else:
                     logger.warn('unknown message type: {}'.format(msg_type))
         except Exception as e:
