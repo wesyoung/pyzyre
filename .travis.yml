@@ -3,7 +3,7 @@ dist: trusty
 language: python
 cache: apt pip
 env:
-    - PYZYRE_BUILD_MASTER=1
+    - PYZYRE_BUILD_MASTER=1 PYZYRE_ZYRE_BUILD_MASTER=1 ZYRE_TRACE=1
 
 python:
   - 2.7
@@ -27,7 +27,7 @@ script:
   - python -c "import pyzyre; print(pyzyre.__version__)"
   - python -c "import zyre; print(zyre.Zyre)"
   - python -c "import czmq; print(czmq.Zactor)"
-  - ZYRE_TRACE=1 python setup.py test
+  - python setup.py test
 
 notifications:
   email:

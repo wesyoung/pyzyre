@@ -18,13 +18,13 @@ from .msg import fatal, debug, info, warn
 pjoin = os.path.join
 
 # https://github.com/zeromq/libzmq/releases/download/v4.2.2/zeromq-4.2.2.tar.gz
-bundled_version = (4, 2, 2)
+bundled_version = (4, 2, 3)
 vs = '%i.%i.%i' % bundled_version
 libzmq = "zeromq-%s.tar.gz" % vs
 libzmq_url = "https://github.com/zeromq/libzmq/releases/download/v{vs}/zeromq-{vs}.tar.gz".format(
     vs=vs,
 )
-libzmq_checksum = "sha256:5b23f4ca9ef545d5bd3af55d305765e3ee06b986263b31967435d285a3e6df6b"
+libzmq_checksum = "sha256:8f1e2b2aade4dbfde98d82366d61baef2f62e812530160d2e6d0a5bb24e40bc0"
 
 HERE = os.path.dirname(__file__)
 ROOT = os.path.dirname(HERE)

@@ -1,15 +1,13 @@
-from zyre import Zyre, ZyreEvent
-import zmq
 import logging
-from czmq import Zsock, string_at, Zmsg, Zcert
-import names
-import uuid
-from pyzyre.constants import ZYRE_GROUP
 import os
-from pprint import pprint
-from pyzyre import color
+import uuid
 
-logger = logging.getLogger('')
+import zmq
+from czmq import Zsock, string_at, Zmsg, Zcert
+from pyzyre.constants import ZYRE_GROUP
+from zyre import Zyre, ZyreEvent
+
+logger = logging.getLogger(__name__)
 
 EVASIVE_TIMEOUT = os.environ.get('ZYRE_EVASIVE_TIMEOUT', 5000)  # zyre defaults
 EXPIRED_TIMEOUT = os.environ.get('ZYRE_EXPIRED_TIMEOUT', 30000)
@@ -28,7 +26,7 @@ def task(pipe, arg):
 
     group = args.get('group', ZYRE_GROUP)
 
-    logger.info('setting up node: %s' % name)
+    logger.debug('setting up node: %s' % name)
     n = Zyre(name)
 
     logger.debug('setting evasive timeout: {}'.format(EVASIVE_TIMEOUT))
@@ -47,16 +45,16 @@ def task(pipe, arg):
         n.set_zcert(cert)
 
     if args.get('endpoint'):
-        logger.info('setting endpoint: {}'.format(args['endpoint']))
+        logger.debug('setting endpoint: {}'.format(args['endpoint']))
         n.set_endpoint(args['endpoint'])
 
     if not args.get('beacon'):
-        logger.info('setting up gossip')
+        logger.debug('setting up gossip')
         if args.get('gossip_bind'):
-            logger.info('binding gossip: {}'.format(args['gossip_bind']))
+            logger.debug('binding gossip: {}'.format(args['gossip_bind']))
             n.gossip_bind(args['gossip_bind'])
         else:
-            logger.info('connecting to gossip group: {}'.format(args['gossip_connect']))
+            logger.debug('connecting to gossip group: {}'.format(args['gossip_connect']))
             if args.get('gossip_publickey'):
                 n.gossip_connect_curve(args['gossip_publickey'], args['gossip_connect'])
             else:
@@ -84,12 +82,12 @@ def task(pipe, arg):
     # registering
     poller.register(ss, zmq.POLLIN)
 
-    logger.info('staring node...')
+    logger.debug('staring node...')
     n.start()
 
     group = group.split('|')
     for g in group:
-        logger.info('joining: %s' % g)
+        logger.debug('joining: %s' % g)
         n.join(g)
 
     pipe_zsock_s.signal(0)  # OK
@@ -189,7 +187,7 @@ def task(pipe, arg):
         except Exception as e:
             logger.exception("Unhandled exception in main io loop")
 
-    logger.info('shutting down node')
+    logger.debug('shutting down node')
     n.stop()
 
     logger.debug('done')

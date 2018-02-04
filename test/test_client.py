@@ -1,16 +1,16 @@
-import sys
-import pytest
-from zmq.eventloop import ioloop
-from pyzyre.client import Client
-from pyzyre._client_task import task
-from czmq import Zcert
 import netifaces as ni
-
+import sys
 from time import sleep
-from pprint import pprint
+
+import pytest
+
 import zmq
 import zmq.auth
+from czmq import Zcert
+from pyzyre.client import Client
+from pyzyre.client._task import task
 from zmq.auth.thread import ThreadAuthenticator
+from zmq.eventloop import ioloop
 
 ioloop.install()
 
@@ -27,10 +27,10 @@ def iface():
 
 def test_client_beacon(iface):
     # test with multi-process framework..
-    c1 = Client(interface=iface, task=task, verbose='1')
+    c1 = Client(interface=iface)
     c1.start_zyre()
 
-    c2 = Client(interface=iface, task=task, verbose='1')
+    c2 = Client(interface=iface)
     c2.start_zyre()
 
     sleep(0.01)
@@ -60,7 +60,7 @@ def test_client_beacon_curve(iface):
     cert1 = Zcert()
     assert(cert1.public_txt())
 
-    c1 = Client(interace=iface, task=task, verbose='1', cert=cert1, zauth=zauth)
+    c1 = Client(interace=iface, cert=cert1, zauth=zauth)
     c1.start_zyre()
 
     sleep(0.01)
@@ -93,10 +93,10 @@ def test_client_beacon_curve(iface):
 
 def test_client_gossip(iface):
     # test with multi-process framework..
-    c1 = Client(task=task, verbose='1', gossip_bind='ipc:///tmp/gossip.ipc', endpoint='ipc:///tmp/c1.ipc')
+    c1 = Client(gossip_bind='ipc:///tmp/gossip.ipc', endpoint='ipc:///tmp/c1.ipc')
     c1.start_zyre()
 
-    c2 = Client(task=task, verbose='1', gossip_connect='ipc:///tmp/gossip.ipc', endpoint='ipc:///tmp/c2.ipc')
+    c2 = Client(gossip_connect='ipc:///tmp/gossip.ipc', endpoint='ipc:///tmp/c2.ipc')
     c2.start_zyre()
 
     sleep(0.01)
@@ -134,13 +134,13 @@ def test_client_gossip_curve(iface):
     assert (gossip_cert.public_txt())
 
     # test with multi-process framework..
-    c1 = Client(task=task, verbose='1', gossip_bind='ipc:///tmp/gossip.ipc', endpoint='ipc:///tmp/c1.ipc', cert=cert1)
+    c1 = Client(gossip_bind='ipc:///tmp/gossip.ipc', endpoint='ipc:///tmp/c1.ipc', cert=cert1)
     c1.start_zyre()
 
     cert2 = Zcert()
     assert (cert2.public_txt())
 
-    c2 = Client(task=task, verbose='1', gossip_connect='ipc:///tmp/gossip.ipc', endpoint='ipc:///tmp/c2.ipc',
+    c2 = Client(gossip_connect='ipc:///tmp/gossip.ipc', endpoint='ipc:///tmp/c2.ipc',
                 cert=cert2, gossip_publickey=cert1.public_txt())
     c2.start_zyre()
 
