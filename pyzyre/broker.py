@@ -7,6 +7,7 @@ from pyzyre.constants import SERVICE_PORT, ZYRE_GROUP, LOG_FORMAT, GOSSIP_PORT, 
     GOSSIP_PUBLIC_KEY
 from pyzyre.client import Client, DefaultHandler
 from czmq import Zcert
+from .utils import setup_logging, get_argument_parser
 
 
 logger = logging.getLogger(__name__)

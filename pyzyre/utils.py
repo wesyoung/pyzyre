@@ -5,14 +5,16 @@ import socket
 from pprint import pprint
 from argparse import ArgumentParser
 from .constants import VERSION, ENDPOINT, PUBLIC_KEY, GOSSIP_PUBLIC_KEY, SECRET_KEY, CURVE_ALLOW_ANY, ZYRE_GROUP, \
-    NODE_NAME, CERT_PATH
+    NODE_NAME, CERT_PATH, LOG_FORMAT, LOGLEVEL
+import logging
+
 
 
 def get_argument_parser():
     BasicArgs = ArgumentParser(add_help=False)
     BasicArgs.add_argument('-d', '--debug', action="store_true")
     BasicArgs.add_argument('-v', '--verbose', action="store_true")
-    #BasicArgs.add_argument('-V', '--version', version=VERSION)
+    BasicArgs.add_argument('-V', '--version', action="version", version=VERSION)
 
     BasicArgs.add_argument('-i', '--interface', help='specify zsys_interface for beacon')
     BasicArgs.add_argument('-l', '--endpoint', help='specify ip listening endpoint [default %(default)s]',
@@ -29,7 +31,7 @@ def get_argument_parser():
     BasicArgs.add_argument('--gossip-bind', help='bind gossip endpoint on this node')
     BasicArgs.add_argument('--gossip-connect')
 
-    BasicArgs.add_argument('--gossip-cert', help="specify gossip cert path [default %(default)s]", default=CERT_PATH)
+    BasicArgs.add_argument('--gossip-cert', help="specify gossip cert path")
     BasicArgs.add_argument('--gossip-publickey', help='specify CURVE public key [default %(default)s]',
                    default=GOSSIP_PUBLIC_KEY)
     BasicArgs.add_argument('--zauth-curve-allow', help="specify zauth curve allow [default %(default)s]",
@@ -37,6 +39,21 @@ def get_argument_parser():
 
 
     return ArgumentParser(parents=[BasicArgs], add_help=False)
+
+
+def setup_logging(args):
+    loglevel = logging.getLevelName(LOGLEVEL)
+
+    if args.verbose:
+        loglevel = logging.INFO
+
+    if args.debug:
+        loglevel = logging.DEBUG
+
+    console = logging.StreamHandler()
+    logging.getLogger('').setLevel(loglevel)
+    console.setFormatter(logging.Formatter(LOG_FORMAT))
+    logging.getLogger('').addHandler(console)
 
 
 def resolve_interface(address):

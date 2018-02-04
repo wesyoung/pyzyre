@@ -28,3 +28,5 @@ NODE_NAME = os.getenv('ZYRE_NODE_NAME')
 ZAUTH_TRACE = os.getenv('ZAUTH_TRACE', False)
 
 CERT_PATH = os.getenv('ZYRE_CERT_PATH', '~/.certs')
+
+LOGLEVEL = os.getenv('ZYRE_LOGLEVEL')

@@ -9,7 +9,7 @@ from zmq.eventloop import ioloop
 from pyzyre.constants import SERVICE_PORT, LOG_FORMAT
 from .client import Client
 
-from .utils import get_argument_parser
+from .utils import get_argument_parser, setup_logging
 
 logger = logging.getLogger(__name__)
 
@@ -28,20 +28,13 @@ def main():
 
     endpoint = resolve_endpoint(SERVICE_PORT)
 
-
     args = p.parse_args()
 
-    loglevel = logging.INFO
     verbose = False
     if args.debug:
-        loglevel = logging.DEBUG
         verbose = '1'
 
-    console = logging.StreamHandler()
-    logging.getLogger('').setLevel(loglevel)
-    console.setFormatter(logging.Formatter(LOG_FORMAT))
-    logging.getLogger('').addHandler(console)
-    logging.propagate = False
+    setup_logging(args)
 
     ioloop.install()
     loop = ioloop.IOLoop.instance()
@@ -66,7 +59,6 @@ def main():
 
     if args.gossip_cert:
         gcert = Zcert.load(args.gossip_cert)
-        logger.debug("Loadded")
         args.gossip_publickey = gcert.public_txt()
         if not args.gossip_connect:
             args.gossip_connect = (gcert.meta('gossip-endpoint'))
@@ -77,14 +69,14 @@ def main():
     client = Client(
         group=args.group,
         loop=loop,
-        #gossip_bind=args.gossip_bind,
-        #gossip_connect=args.gossip_connect,
+        gossip_bind=args.gossip_bind,
+        gossip_connect=args.gossip_connect,
         endpoint=args.endpoint,
         verbose=verbose,
         interface=args.interface,
         cert=cert,
-        #gossip_publickey=args.gossip_publickey,
-        #zauth=args.zauth_curve_allow,
+        gossip_publickey=args.gossip_publickey,
+        zauth=args.zauth_curve_allow,
         name=args.name
     )
 
