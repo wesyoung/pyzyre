@@ -1,3 +1,6 @@
+from ._version import get_versions
+VERSION = get_versions()['version']
+del get_versions
 import os
 import sys
 
@@ -21,3 +24,7 @@ PUBLIC_KEY = os.getenv('ZYRE_PUBLIC_KEY')
 SECRET_KEY = os.getenv('ZYRE_SECRET_KEY')
 GOSSIP_PUBLIC_KEY = os.getenv('ZYRE_GOSSIP_PUBLICKEY')
 
+NODE_NAME = os.getenv('ZYRE_NODE_NAME')
+ZAUTH_TRACE = os.getenv('ZAUTH_TRACE', False)
+
+CERT_PATH = os.getenv('ZYRE_CERT_PATH', '~/.certs')

@@ -1,4 +1,3 @@
-from argparse import ArgumentParser
 import zmq
 import logging
 from czmq import Zactor, zactor_fn, create_string_buffer, Zcert, lib
@@ -6,15 +5,11 @@ import os
 import os.path
 from pyzyre.utils import resolve_gossip, resolve_endpoint
 import names
-from pprint import pprint
 from ._client_task import task as client_task
-import sys
-from zmq.eventloop import ioloop
 from time import sleep
-from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_GROUP, LOG_FORMAT, PYVERSION, GOSSIP_CONNECT, ENDPOINT, \
-    CURVE_ALLOW_ANY, GOSSIP_PUBLIC_KEY, SECRET_KEY, PUBLIC_KEY
+from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_GROUP, PYVERSION, GOSSIP_CONNECT, ENDPOINT, \
+    CURVE_ALLOW_ANY
 
-import dns.resolver
 
 NODE_NAME = os.getenv('ZYRE_NODE_NAME')
 ZAUTH_TRACE = os.getenv('ZAUTH_TRACE', False)
@@ -300,111 +295,3 @@ class Client(object):
             logger.warn("unhandled m_type {} rest of message is {}".format(m_type, m))
 
 
-def main():
-    p = ArgumentParser()
-
-    endpoint = resolve_endpoint(SERVICE_PORT)
-
-    p.add_argument('--gossip-bind', help='bind gossip endpoint on this node')
-    p.add_argument('--gossip-connect')
-    p.add_argument('-i', '--interface', help='specify zsys_interface for beacon')
-    p.add_argument('-l', '--endpoint', help='specify ip listening endpoint [default %(default)s]', default=endpoint)
-    p.add_argument('-d', '--debug', help='enable debugging', action='store_true')
-    p.add_argument('--gossip-cert', help="specify gossip cert path")
-    p.add_argument('--cert', help="specify local cert path")
-    p.add_argument('--curve', help="enable CURVE (TLS)", action="store_true")
-    p.add_argument('--publickey', help="specify CURVE public key [default %(default)s]", default=PUBLIC_KEY)
-    p.add_argument('--secretkey', help="specify CURVE secret key [default %(default)s]", default=SECRET_KEY)
-    p.add_argument('--gossip-publickey', help='specify CURVE public key [default %(default)s]', default=GOSSIP_PUBLIC_KEY)
-    p.add_argument('--zauth-curve-allow', help="specify zauth curve allow [default %(default)s]",
-                   default=CURVE_ALLOW_ANY)
-    p.add_argument('--name')
-
-    p.add_argument('--group', default=ZYRE_GROUP)
-
-    args = p.parse_args()
-
-    loglevel = logging.INFO
-    verbose = False
-    if args.debug:
-        loglevel = logging.DEBUG
-        verbose = '1'
-
-    console = logging.StreamHandler()
-    logging.getLogger('').setLevel(loglevel)
-    console.setFormatter(logging.Formatter(LOG_FORMAT))
-    logging.getLogger('').addHandler(console)
-    logging.propagate = False
-
-    ioloop.install()
-    loop = ioloop.IOLoop.instance()
-
-    cert = None
-
-    if args.curve or args.publickey or args.cert or args.gossip_publickey:
-        logger.debug('enabling curve...')
-        cert = Zcert()
-        if args.publickey:
-            if not args.secretkey:
-                logger.error("CURVE Secret Key required")
-                raise SystemExit
-
-            cert = Zcert.new_from_txt(args.publickey, args.secretkey)
-
-        if args.cert:
-            cert = Zcert.load(args.cert)
-
-        logger.debug("Public Key: %s" % cert.public_txt())
-        logger.debug("Secret Key: %s" % cert.secret_txt())
-
-    if args.gossip_cert:
-        gcert = Zcert.load(args.gossip_cert)
-        logger.debug("Loadded")
-        args.gossip_publickey = gcert.public_txt()
-        if not args.gossip_connect:
-            args.gossip_connect = (gcert.meta('gossip-endpoint'))
-
-        if not cert:
-            cert = Zcert()
-
-    client = Client(
-        group=args.group,
-        loop=loop,
-        gossip_bind=args.gossip_bind,
-        gossip_connect=args.gossip_connect,
-        endpoint=args.endpoint,
-        verbose=verbose,
-        interface=args.interface,
-        cert=cert,
-        gossip_publickey=args.gossip_publickey,
-        zauth=args.zauth_curve_allow,
-        name=args.name
-    )
-
-    def on_stdin(s, e):
-        content = s.readline().rstrip()
-
-        if content.startswith('CLIENT:'):
-            address, message = content.split(' - ')
-            address = address.split(':')[1]
-            client.whisper(message, address)
-        else:
-            client.shout(args.group, content.encode('utf-8'))
-
-    client.start_zyre()
-
-    loop.add_handler(client.actor, client.handle_message, zmq.POLLIN)
-    loop.add_handler(sys.stdin, on_stdin, ioloop.IOLoop.READ)
-
-    try:
-        loop.start()
-    except KeyboardInterrupt:
-        logger.info('SIGINT Received')
-
-    logger.info('shutting down..')
-
-    client.stop_zyre()
-
-
-if __name__ == '__main__':
-    main()

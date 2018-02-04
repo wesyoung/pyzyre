@@ -3,6 +3,40 @@ import netaddr
 import os.path
 import socket
 from pprint import pprint
+from argparse import ArgumentParser
+from .constants import VERSION, ENDPOINT, PUBLIC_KEY, GOSSIP_PUBLIC_KEY, SECRET_KEY, CURVE_ALLOW_ANY, ZYRE_GROUP, \
+    NODE_NAME, CERT_PATH
+
+
+def get_argument_parser():
+    BasicArgs = ArgumentParser(add_help=False)
+    BasicArgs.add_argument('-d', '--debug', action="store_true")
+    BasicArgs.add_argument('-v', '--verbose', action="store_true")
+    #BasicArgs.add_argument('-V', '--version', version=VERSION)
+
+    BasicArgs.add_argument('-i', '--interface', help='specify zsys_interface for beacon')
+    BasicArgs.add_argument('-l', '--endpoint', help='specify ip listening endpoint [default %(default)s]',
+                           default=ENDPOINT)
+
+    BasicArgs.add_argument('--name', help='specify node name [default %(default)s]', default=NODE_NAME)
+    BasicArgs.add_argument('--group', default=ZYRE_GROUP)
+
+    BasicArgs.add_argument('--cert', help="specify local cert path")
+    BasicArgs.add_argument('--curve', help="enable CURVE (TLS)", action="store_true")
+    BasicArgs.add_argument('--publickey', help="specify CURVE public key [default %(default)s]", default=PUBLIC_KEY)
+    BasicArgs.add_argument('--secretkey', help="specify CURVE secret key [default %(default)s]", default=SECRET_KEY)
+
+    BasicArgs.add_argument('--gossip-bind', help='bind gossip endpoint on this node')
+    BasicArgs.add_argument('--gossip-connect')
+
+    BasicArgs.add_argument('--gossip-cert', help="specify gossip cert path [default %(default)s]", default=CERT_PATH)
+    BasicArgs.add_argument('--gossip-publickey', help='specify CURVE public key [default %(default)s]',
+                   default=GOSSIP_PUBLIC_KEY)
+    BasicArgs.add_argument('--zauth-curve-allow', help="specify zauth curve allow [default %(default)s]",
+                   default=CURVE_ALLOW_ANY)
+
+
+    return ArgumentParser(parents=[BasicArgs], add_help=False)
 
 
 def resolve_interface(address):
