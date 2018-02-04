@@ -30,3 +30,6 @@ ZAUTH_TRACE = os.getenv('ZAUTH_TRACE', False)
 CERT_PATH = os.getenv('ZYRE_CERT_PATH', '~/.certs')
 
 LOGLEVEL = os.getenv('ZYRE_LOGLEVEL')
+
+ZMQ_LINGER = os.getenv('ZMQ_LINGER', 0)
+ZYRE_GATEWAY = os.getenv('ZYRE_GATEWAY')

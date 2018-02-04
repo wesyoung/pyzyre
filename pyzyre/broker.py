@@ -1,13 +1,14 @@
-from argparse import ArgumentParser
-import zmq
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import logging
-from pyzyre.utils import resolve_endpoint
+import textwrap
+
+import zmq
 from zmq.eventloop import ioloop
-from pyzyre.constants import SERVICE_PORT, ZYRE_GROUP, LOG_FORMAT, GOSSIP_PORT, CURVE_ALLOW_ANY, PUBLIC_KEY, SECRET_KEY, \
-    GOSSIP_PUBLIC_KEY
-from pyzyre.client import Client, DefaultHandler
 from czmq import Zcert
-from .utils import setup_logging, get_argument_parser
+
+from .utils import resolve_endpoint, get_argument_parser, setup_logging
+from .client import Client, DefaultHandler
+from .constants import SERVICE_PORT, GOSSIP_PORT
 
 
 logger = logging.getLogger(__name__)
@@ -20,39 +21,23 @@ class BrokerHandler(DefaultHandler):
 
 # see examples/pub.py and sub.py
 def main():
-    p = ArgumentParser()
+    p = get_argument_parser()
+    p = ArgumentParser(
+        description=textwrap.dedent('''\
+                example usage:
+                    $ zyre-broker -d
+                '''),
+        formatter_class=RawDescriptionHelpFormatter,
+        prog='zyre-broker',
+        parents=[p]
+    )
 
     endpoint = resolve_endpoint(SERVICE_PORT)
     gossip = resolve_endpoint(GOSSIP_PORT)
 
-    p.add_argument('-g','--gossip-bind', help='bind gossip endpoint on this node [default %(default)s]', default=gossip)
-    p.add_argument('-e', '--endpoint', help='specify ip listening endpoint [default %(default)s]', default=endpoint)
-    p.add_argument('-d', '--debug', help='enable debugging', action='store_true')
-
-    p.add_argument('--group', help="group to join [default %(default)s]", default=ZYRE_GROUP)
-
-    p.add_argument('--gossip-cert', help="specify gossip cert path")
-    p.add_argument('--cert', help="specify local cert path")
-    p.add_argument('--curve', help="enable CURVE (TLS)", action="store_true")
-    p.add_argument('--gossip-publickey', default=GOSSIP_PUBLIC_KEY)
-    p.add_argument('--publickey', help="specify CURVE public key [default %(default)s]", default=PUBLIC_KEY)
-    p.add_argument('--secretkey', help="specify CURVE secret key [default %(default)s]", default=SECRET_KEY)
-    p.add_argument('--name')
-    
-    p.add_argument('--zauth-curve-allow', help="specify zauth curve allow [default %(default)s]",
-                   default=CURVE_ALLOW_ANY)
-
     args = p.parse_args()
 
-    loglevel = logging.INFO
-    if args.debug:
-        loglevel = logging.DEBUG
-
-    console = logging.StreamHandler()
-    logging.getLogger('').setLevel(loglevel)
-    console.setFormatter(logging.Formatter(LOG_FORMAT))
-    logging.getLogger('').addHandler(console)
-    logging.propagate = False
+    setup_logging(args)
 
     cert = None
 

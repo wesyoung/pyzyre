@@ -1,15 +1,16 @@
-from argparse import ArgumentParser
-import zmq
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
+import textwrap
 import logging
-from pyzyre.utils import resolve_endpoint
+
+import zmq
 from zmq.eventloop import ioloop
-from pyzyre.constants import SERVICE_PORT, ZYRE_GROUP, LOG_FORMAT, CURVE_ALLOW_ANY, GOSSIP_PUBLIC_KEY, PUBLIC_KEY, \
-    SECRET_KEY
-from pyzyre.client import Client, DefaultHandler
 from czmq import Zcert
 
+from .utils import resolve_endpoint, setup_logging, get_argument_parser
+from .constants import SERVICE_PORT
+from .client import Client, DefaultHandler
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('')
 
 
 class GatewayHandler(DefaultHandler):
@@ -22,42 +23,27 @@ class GatewayHandler(DefaultHandler):
 
 # see examples/pub.py and sub.py
 def main():
-    p = ArgumentParser()
+    p = get_argument_parser()
+    p = ArgumentParser(
+        description=textwrap.dedent('''\
+                example usage:
+                    $ zyre-gateway -d
+                '''),
+        formatter_class=RawDescriptionHelpFormatter,
+        prog='zyre-gateway',
+        parents=[p]
+    )
 
     endpoint = resolve_endpoint(SERVICE_PORT)
 
-    p.add_argument('--gossip-bind', help='bind gossip endpoint on this node')
-    p.add_argument('--gossip-connect')
-    p.add_argument('-i', '--interface', help='specify zsys_interface for beacon')
-    p.add_argument('-l', '--endpoint', help='specify ip listening endpoint [default %(default)s]', default=endpoint)
-    p.add_argument('-d', '--debug', help='enable debugging', action='store_true')
-    p.add_argument('-p', '--pub', help='endpoint to bind for PUB socket [default %(default)s]', default="tcp://*:5001")
-    p.add_argument('-u', '--pull', help='endpoint to bind for PULL socket [default %(default)s]', default="tcp://*:5002")
-
-    p.add_argument('--group', default=ZYRE_GROUP)
-
-    p.add_argument('--gossip-cert', help="specify gossip cert path")
-    p.add_argument('--cert', help="specify local cert path")
-    p.add_argument('--curve', help="enable CURVE (TLS)", action="store_true")
-    p.add_argument('--gossip-publickey', default=GOSSIP_PUBLIC_KEY)
-    p.add_argument('--publickey', help="specify CURVE public key [default %(default)s]", default=PUBLIC_KEY)
-    p.add_argument('--secretkey', help="specify CURVE secret key [default %(default)s]", default=SECRET_KEY)
-    p.add_argument('--zauth-curve-allow', help="specify zauth curve allow [default %(default)s]",
-                   default=CURVE_ALLOW_ANY)
+    p.add_argument('-p', '--pub', help='endpoint to bind for PUB socket [default %(default)s]',
+                   default="tcp://*:5001")
+    p.add_argument('-u', '--pull', help='endpoint to bind for PULL socket [default %(default)s]',
+                   default="tcp://*:5002")
 
     args = p.parse_args()
 
-    loglevel = logging.INFO
-    verbose = False
-    if args.debug:
-        loglevel = logging.DEBUG
-        verbose = '1'
-
-    console = logging.StreamHandler()
-    logging.getLogger('').setLevel(loglevel)
-    console.setFormatter(logging.Formatter(LOG_FORMAT))
-    logging.getLogger('').addHandler(console)
-    logging.propagate = False
+    setup_logging(args)
 
     cert = None
 
@@ -79,7 +65,6 @@ def main():
 
     if args.gossip_cert:
         gcert = Zcert.load(args.gossip_cert)
-        logger.debug("Loadded")
         args.gossip_publickey = gcert.public_txt()
         if not args.gossip_connect:
             args.gossip_connect = (gcert.meta('gossip-endpoint'))
@@ -112,7 +97,7 @@ def main():
         gossip_bind=args.gossip_bind,
         gossip_connect=args.gossip_connect,
         endpoint=args.endpoint,
-        verbose=verbose,
+        #verbose=verbose,
         interface=args.interface,
         cert=cert,
         gossip_publickey=args.gossip_publickey,
@@ -149,6 +134,7 @@ def main():
     logger.info('shutting down..')
 
     client.stop_zyre()
+
 
 if __name__ == '__main__':
     main()

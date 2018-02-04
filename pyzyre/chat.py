@@ -11,7 +11,7 @@ from .client import Client
 
 from .utils import get_argument_parser, setup_logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('pyzyre.chat')
 
 
 def main():
@@ -30,11 +30,7 @@ def main():
 
     args = p.parse_args()
 
-    verbose = False
-    if args.debug:
-        verbose = '1'
-
-    setup_logging(args)
+    setup_logging(args, name='pyzyre.chat')
 
     ioloop.install()
     loop = ioloop.IOLoop.instance()
@@ -72,7 +68,6 @@ def main():
         gossip_bind=args.gossip_bind,
         gossip_connect=args.gossip_connect,
         endpoint=args.endpoint,
-        verbose=verbose,
         interface=args.interface,
         cert=cert,
         gossip_publickey=args.gossip_publickey,

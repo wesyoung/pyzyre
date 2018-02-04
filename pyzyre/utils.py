@@ -2,19 +2,24 @@ import netifaces as ni
 import netaddr
 import os.path
 import socket
-from pprint import pprint
 from argparse import ArgumentParser
-from .constants import VERSION, ENDPOINT, PUBLIC_KEY, GOSSIP_PUBLIC_KEY, SECRET_KEY, CURVE_ALLOW_ANY, ZYRE_GROUP, \
-    NODE_NAME, CERT_PATH, LOG_FORMAT, LOGLEVEL
 import logging
 
+from .constants import VERSION, ENDPOINT, PUBLIC_KEY, GOSSIP_PUBLIC_KEY, SECRET_KEY, CURVE_ALLOW_ANY, ZYRE_GROUP, \
+    NODE_NAME, CERT_PATH, LOG_FORMAT, LOGLEVEL
+
+if not os.path.exists(CERT_PATH):
+    CERT_PATH = None
 
 
-def get_argument_parser():
+def get_argument_parser(advanced=True):
     BasicArgs = ArgumentParser(add_help=False)
     BasicArgs.add_argument('-d', '--debug', action="store_true")
     BasicArgs.add_argument('-v', '--verbose', action="store_true")
     BasicArgs.add_argument('-V', '--version', action="version", version=VERSION)
+
+    if not advanced:
+        return ArgumentParser(parents=[BasicArgs], add_help=False)
 
     BasicArgs.add_argument('-i', '--interface', help='specify zsys_interface for beacon')
     BasicArgs.add_argument('-l', '--endpoint', help='specify ip listening endpoint [default %(default)s]',
@@ -31,17 +36,16 @@ def get_argument_parser():
     BasicArgs.add_argument('--gossip-bind', help='bind gossip endpoint on this node')
     BasicArgs.add_argument('--gossip-connect')
 
-    BasicArgs.add_argument('--gossip-cert', help="specify gossip cert path")
+    BasicArgs.add_argument('--gossip-cert', help="specify gossip cert path [default %(default)s]", default=CERT_PATH)
     BasicArgs.add_argument('--gossip-publickey', help='specify CURVE public key [default %(default)s]',
-                   default=GOSSIP_PUBLIC_KEY)
+                           default=GOSSIP_PUBLIC_KEY)
     BasicArgs.add_argument('--zauth-curve-allow', help="specify zauth curve allow [default %(default)s]",
-                   default=CURVE_ALLOW_ANY)
-
+                           default=CURVE_ALLOW_ANY)
 
     return ArgumentParser(parents=[BasicArgs], add_help=False)
 
 
-def setup_logging(args):
+def setup_logging(args, name=None):
     loglevel = logging.getLevelName(LOGLEVEL)
 
     if args.verbose:
@@ -54,6 +58,11 @@ def setup_logging(args):
     logging.getLogger('').setLevel(loglevel)
     console.setFormatter(logging.Formatter(LOG_FORMAT))
     logging.getLogger('').addHandler(console)
+
+    if name:
+        logging.getLogger(name).setLevel(loglevel)
+        console.setFormatter(logging.Formatter(LOG_FORMAT))
+        logging.getLogger(name).addHandler(console)
 
 
 def resolve_interface(address):

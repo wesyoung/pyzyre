@@ -78,7 +78,6 @@ class Client(object):
 
         self.actor = None
         self.task = zactor_fn(client_task)
-        self.verbose = kwargs.get('verbose')
 
         if self.gossip_bind:
             self.beacon = False
@@ -177,9 +176,6 @@ class Client(object):
             'group=%s' % self.group,
             'name=%s' % self.name,
         ]
-
-        if self.verbose:
-            actor_args.append('verbose=1')
 
         if self.gossip_bind:
             actor_args.append('gossip_bind=%s' % self.gossip_bind)
