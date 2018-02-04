@@ -7,7 +7,7 @@ import logging
 
 from czmq import Zcert
 
-from .constants import VERSION, ENDPOINT, PUBLIC_KEY, GOSSIP_PUBLIC_KEY, SECRET_KEY, CURVE_ALLOW_ANY, ZYRE_GROUP, \
+from pyzyre.constants import VERSION, ENDPOINT, PUBLIC_KEY, GOSSIP_PUBLIC_KEY, SECRET_KEY, CURVE_ALLOW_ANY, ZYRE_GROUP, \
     NODE_NAME, CERT_PATH, LOG_FORMAT, LOGLEVEL
 
 if not os.path.exists(CERT_PATH):

@@ -1,13 +1,11 @@
-from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import logging
 import textwrap
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
 import zmq
-from zmq.eventloop import ioloop
-
-from .utils import get_argument_parser, setup_logging, setup_curve
 from .client import Client, DefaultHandler
-
+from zmq.eventloop import ioloop
+from .utils import get_argument_parser, setup_logging, setup_curve
 
 logger = logging.getLogger(__name__)
 

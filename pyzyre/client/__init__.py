@@ -1,16 +1,18 @@
-import zmq
 import logging
-from czmq import Zactor, zactor_fn, create_string_buffer, Zcert, lib
 import os
 import os.path
-from pyzyre.utils import resolve_gossip, resolve_endpoint
-import names
-from ._client_task import task as client_task
 from time import sleep
-from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_GROUP, PYVERSION, GOSSIP_CONNECT, ENDPOINT, \
-    CURVE_ALLOW_ANY
 
-NODE_NAME = os.getenv('ZYRE_NODE_NAME')
+import names
+
+import zmq
+from czmq import Zactor, zactor_fn, create_string_buffer, lib
+
+from ._task import task as client_task
+from ..utils import resolve_gossip, resolve_endpoint
+from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_GROUP, PYVERSION, GOSSIP_CONNECT, ENDPOINT, \
+    CURVE_ALLOW_ANY, NODE_NAME
+
 ZAUTH_TRACE = os.getenv('ZAUTH_TRACE', False)
 
 logger = logging.getLogger(__name__)

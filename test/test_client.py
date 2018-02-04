@@ -1,16 +1,16 @@
-import sys
-import pytest
-from zmq.eventloop import ioloop
-from pyzyre.client import Client
-from pyzyre._client_task import task
-from czmq import Zcert
 import netifaces as ni
-
+import sys
 from time import sleep
-from pprint import pprint
+
+import pytest
+
 import zmq
 import zmq.auth
+from czmq import Zcert
+from pyzyre.client.client import Client
+from pyzyre.client.client import task
 from zmq.auth.thread import ThreadAuthenticator
+from zmq.eventloop import ioloop
 
 ioloop.install()
 

@@ -1,13 +1,11 @@
-from zyre import Zyre, ZyreEvent
-import zmq
 import logging
-from czmq import Zsock, string_at, Zmsg, Zcert
-import names
-import uuid
-from pyzyre.constants import ZYRE_GROUP
 import os
-from pprint import pprint
-from pyzyre import color
+import uuid
+
+import zmq
+from czmq import Zsock, string_at, Zmsg, Zcert
+from pyzyre.constants import ZYRE_GROUP
+from zyre import Zyre, ZyreEvent
 
 logger = logging.getLogger(__name__)
 

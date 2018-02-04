@@ -1,13 +1,11 @@
-from argparse import ArgumentParser, RawDescriptionHelpFormatter
-import textwrap
 import logging
+import textwrap
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
 import zmq
-from zmq.eventloop import ioloop
-
-from .utils import resolve_endpoint, setup_logging, get_argument_parser, setup_curve
-from .constants import SERVICE_PORT
 from .client import Client, DefaultHandler
+from zmq.eventloop import ioloop
+from .utils import setup_logging, get_argument_parser, setup_curve
 
 logger = logging.getLogger(__name__)
 
@@ -32,8 +30,6 @@ def main():
         prog='zyre-gateway',
         parents=[p]
     )
-
-    endpoint = resolve_endpoint(SERVICE_PORT)
 
     p.add_argument('-p', '--pub', help='endpoint to bind for PUB socket [default %(default)s]',
                    default="tcp://*:5001")
