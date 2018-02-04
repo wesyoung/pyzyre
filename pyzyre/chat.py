@@ -4,9 +4,9 @@ import textwrap
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
 import zmq
-from .client import Client
+from pyzyre.client import Client
 from zmq.eventloop import ioloop
-from .utils import get_argument_parser, setup_logging, setup_curve
+from pyzyre.utils import get_argument_parser, setup_logging, setup_curve
 
 logger = logging.getLogger('pyzyre.chat')
 

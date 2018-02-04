@@ -210,7 +210,7 @@ cmdclass = {
 }
 
 
-packages = ['czmq', 'zyre', 'pyzyre']
+packages = ['czmq', 'zyre', 'pyzyre', 'pyzyre.client', 'pyzyre.utils']
 
 package_data = {
     'zyre': ['*' + lib_ext]

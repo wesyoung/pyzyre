@@ -5,8 +5,8 @@ import select
 import sys
 
 import zmq
-from .constants import PYVERSION, ZMQ_LINGER, ZYRE_GATEWAY
-from .utils import setup_logging, get_argument_parser
+from pyzyre.constants import PYVERSION, ZMQ_LINGER, ZYRE_GATEWAY
+from pyzyre.utils import setup_logging, get_argument_parser
 
 
 def main():
