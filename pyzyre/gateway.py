@@ -4,13 +4,12 @@ import logging
 
 import zmq
 from zmq.eventloop import ioloop
-from czmq import Zcert
 
-from .utils import resolve_endpoint, setup_logging, get_argument_parser
+from .utils import resolve_endpoint, setup_logging, get_argument_parser, setup_curve
 from .constants import SERVICE_PORT
 from .client import Client, DefaultHandler
 
-logger = logging.getLogger('')
+logger = logging.getLogger(__name__)
 
 
 class GatewayHandler(DefaultHandler):
@@ -45,32 +44,7 @@ def main():
 
     setup_logging(args)
 
-    cert = None
-
-    if args.curve or args.publickey or args.cert or args.gossip_publickey:
-        logger.debug('enabling curve...')
-        cert = Zcert()
-        if args.publickey:
-            if not args.secretkey:
-                logger.error("CURVE Secret Key required")
-                raise SystemExit
-
-            cert = Zcert.new_from_txt(args.publickey, args.secretkey)
-
-        if args.cert:
-            cert = Zcert.load(args.cert)
-
-        logger.debug("Public Key: %s" % cert.public_txt())
-        logger.debug("Secret Key: %s" % cert.secret_txt())
-
-    if args.gossip_cert:
-        gcert = Zcert.load(args.gossip_cert)
-        args.gossip_publickey = gcert.public_txt()
-        if not args.gossip_connect:
-            args.gossip_connect = (gcert.meta('gossip-endpoint'))
-
-        if not cert:
-            cert = Zcert()
+    args.cert = setup_curve(args)
 
     ioloop.install()
     loop = ioloop.IOLoop.instance()
@@ -92,16 +66,8 @@ def main():
 
     client = Client(
         handler=GatewayHandler(pub),
-        group=args.group,
         loop=loop,
-        gossip_bind=args.gossip_bind,
-        gossip_connect=args.gossip_connect,
-        endpoint=args.endpoint,
-        #verbose=verbose,
-        interface=args.interface,
-        cert=cert,
-        gossip_publickey=args.gossip_publickey,
-        zauth=args.zauth_curve_allow
+        **args.__dict__
     )
 
     def handle_pull(*args):

@@ -5,11 +5,16 @@ import socket
 from argparse import ArgumentParser
 import logging
 
+from czmq import Zcert
+
 from .constants import VERSION, ENDPOINT, PUBLIC_KEY, GOSSIP_PUBLIC_KEY, SECRET_KEY, CURVE_ALLOW_ANY, ZYRE_GROUP, \
     NODE_NAME, CERT_PATH, LOG_FORMAT, LOGLEVEL
 
 if not os.path.exists(CERT_PATH):
     CERT_PATH = None
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_argument_parser(advanced=True):
@@ -45,7 +50,7 @@ def get_argument_parser(advanced=True):
     return ArgumentParser(parents=[BasicArgs], add_help=False)
 
 
-def setup_logging(args, name=None):
+def setup_logging(args):
     loglevel = logging.getLevelName(LOGLEVEL)
 
     if args.verbose:
@@ -59,10 +64,33 @@ def setup_logging(args, name=None):
     console.setFormatter(logging.Formatter(LOG_FORMAT))
     logging.getLogger('').addHandler(console)
 
-    if name:
-        logging.getLogger(name).setLevel(loglevel)
-        console.setFormatter(logging.Formatter(LOG_FORMAT))
-        logging.getLogger(name).addHandler(console)
+
+def setup_curve(args):
+    if not args.curve or args.publickey or args.cert or args.gossip_publickey or args.gossip_cert:
+        return None
+
+    if args.curve or args.publickey or args.cert or args.gossip_publickey:
+        cert = Zcert()
+        if args.publickey:
+            if not args.secretkey:
+                raise SystemExit
+
+            cert = Zcert.new_from_txt(args.publickey, args.secretkey)
+
+        if args.cert:
+            cert = Zcert.load(args.cert)
+
+    if args.gossip_cert:
+        gcert = Zcert.load(args.gossip_cert)
+        args.gossip_publickey = gcert.public_txt()
+        if not args.gossip_connect:
+            args.gossip_connect = (gcert.meta('gossip-endpoint'))
+
+        if not cert:
+            cert = Zcert()
+
+    logger.info('CURVE configured...')
+    return cert
 
 
 def resolve_interface(address):

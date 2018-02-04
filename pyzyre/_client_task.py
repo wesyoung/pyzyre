@@ -9,7 +9,7 @@ import os
 from pprint import pprint
 from pyzyre import color
 
-logger = logging.getLogger('pyzyre._client_task')
+logger = logging.getLogger(__name__)
 
 EVASIVE_TIMEOUT = os.environ.get('ZYRE_EVASIVE_TIMEOUT', 5000)  # zyre defaults
 EXPIRED_TIMEOUT = os.environ.get('ZYRE_EXPIRED_TIMEOUT', 30000)

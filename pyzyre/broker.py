@@ -4,11 +4,9 @@ import textwrap
 
 import zmq
 from zmq.eventloop import ioloop
-from czmq import Zcert
 
-from .utils import resolve_endpoint, get_argument_parser, setup_logging
+from .utils import get_argument_parser, setup_logging, setup_curve
 from .client import Client, DefaultHandler
-from .constants import SERVICE_PORT, GOSSIP_PORT
 
 
 logger = logging.getLogger(__name__)
@@ -26,60 +24,26 @@ def main():
         description=textwrap.dedent('''\
                 example usage:
                     $ zyre-broker -d
+                    $ zyre-broker --curve
                 '''),
         formatter_class=RawDescriptionHelpFormatter,
         prog='zyre-broker',
         parents=[p]
     )
 
-    endpoint = resolve_endpoint(SERVICE_PORT)
-    gossip = resolve_endpoint(GOSSIP_PORT)
-
     args = p.parse_args()
 
     setup_logging(args)
 
-    cert = None
-
-    if args.curve or args.publickey or args.cert or args.gossip_publickey:
-        logger.debug('enabling curve...')
-        cert = Zcert()
-        if args.publickey:
-            if not args.secretkey:
-                logger.error("CURVE Secret Key required")
-                raise SystemExit
-
-            cert = Zcert.new_from_txt(args.publickey, args.secretkey)
-
-        if args.cert:
-            cert = Zcert.load(args.cert)
-
-        logger.debug("Public Key: %s" % cert.public_txt())
-        logger.debug("Secret Key: %s" % cert.secret_txt())
-
-    if args.gossip_cert:
-        gcert = Zcert.load(args.gossip_cert)
-        logger.debug("Loadded")
-        args.gossip_publickey = gcert.public_txt()
-        if not args.gossip_connect:
-            args.gossip_connect = (gcert.meta('gossip-endpoint'))
-
-        if not cert:
-            cert = Zcert()
+    args.cert = setup_curve(args)
 
     ioloop.install()
     loop = ioloop.IOLoop.instance()
 
     client = Client(
         handler=BrokerHandler(),
-        group=args.group,
         loop=loop,
-        gossip_bind=args.gossip_bind,
-        endpoint=args.endpoint,
-        cert=cert,
-        gossip_publickey=args.gossip_publickey,
-        zauth=args.zauth_curve_allow,
-        name=args.name,
+        **args.__dict__
     )
 
     client.start_zyre()

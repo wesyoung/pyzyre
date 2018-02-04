@@ -18,13 +18,13 @@ ENABLE_CHECKSUM = False
 pjoin = os.path.join
 
 # https://github.com/zeromq/czmq/archive/v4.0.2.tar.gz
-bundled_version = (4, 0, 2)
+bundled_version = (4, 1, 0)
 vs = '%i.%i.%i' % bundled_version
 libczmq = "czmq-%s.tar.gz" % vs
 libczmq_url = "https://github.com/zeromq/czmq/archive/v{vs}.tar.gz".format(
     vs=vs,
 )
-libczmq_checksum = "sha256:794f80af7392ec8d361ad69646fc20aaa284d23fef92951334009771a732c810"
+libczmq_checksum = "sha256:2e87c19988d1168b70d7ec0fdce79aba4e92a6330959c3a2576c72b319acb478"
 
 if os.getenv("PYZYRE_BUILD_MASTER", False) == '1':
     libczmq_url = "https://github.com/zeromq/czmq/archive/master.tar.gz"
