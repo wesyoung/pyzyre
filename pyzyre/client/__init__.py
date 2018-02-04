@@ -9,7 +9,7 @@ import zmq
 from czmq import Zactor, zactor_fn, create_string_buffer, lib
 
 from ._task import task as client_task
-from ..utils import resolve_gossip, resolve_endpoint
+from ..utils import resolve_gossip, resolve_endpoint, resolve_gossip_bootstrap
 from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_GROUP, PYVERSION, GOSSIP_CONNECT, ENDPOINT, \
     CURVE_ALLOW_ANY, NODE_NAME
 
@@ -138,7 +138,6 @@ class Client(object):
 
     def _init_gossip_connect(self):
         if self.cert and not self.gossip_publickey:
-            from .utils import resolve_gossip_bootstrap
             self.gossip_publickey = resolve_gossip_bootstrap(self.gossip_connect)
             logger.debug(self.gossip_publickey)
 
