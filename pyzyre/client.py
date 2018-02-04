@@ -10,7 +10,6 @@ from time import sleep
 from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_GROUP, PYVERSION, GOSSIP_CONNECT, ENDPOINT, \
     CURVE_ALLOW_ANY
 
-
 NODE_NAME = os.getenv('ZYRE_NODE_NAME')
 ZAUTH_TRACE = os.getenv('ZAUTH_TRACE', False)
 
@@ -142,7 +141,7 @@ class Client(object):
             logger.debug(self.gossip_publickey)
 
         try:
-            logger.info('resolving gossip-connect: {}'.format(self.gossip_connect))
+            logger.debug('resolving gossip-connect: {}'.format(self.gossip_connect))
             self.gossip_connect = resolve_gossip(GOSSIP_PORT, self.gossip_connect)
             logger.debug('gossip-connect: %s' % self.gossip_connect)
 

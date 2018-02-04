@@ -30,7 +30,7 @@ def main():
 
     args = p.parse_args()
 
-    setup_logging(args, name='pyzyre.chat')
+    setup_logging(args, name=__name__)
 
     ioloop.install()
     loop = ioloop.IOLoop.instance()
