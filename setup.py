@@ -251,7 +251,8 @@ setup(
             'zyre-chat=pyzyre.chat:main',
             'zyre-pipe=pyzyre.zpipe:main',
             'zyre-gateway=pyzyre.gateway:main',
-            'zyre-broker=pyzyre.broker:main'
+            'zyre-broker=pyzyre.broker:main',
+            'zyre-certs=pyzyre.zcerts:main',
         ]
     }
 )
