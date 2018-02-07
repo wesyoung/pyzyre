@@ -137,9 +137,10 @@ class Client(object):
                 raise RuntimeError('A local interface must be specified')
 
     def _init_gossip_connect(self):
-        if self.cert and not self.gossip_publickey:
-            self.gossip_publickey = resolve_gossip_bootstrap(self.gossip_connect)
-            logger.debug(self.gossip_publickey)
+        #TODO
+        # if self.cert and not self.gossip_publickey:
+        #     self.gossip_publickey = resolve_gossip_bootstrap(self.gossip_connect)
+        #     logger.debug(self.gossip_publickey)
 
         try:
             logger.debug('resolving gossip-connect: {}'.format(self.gossip_connect))

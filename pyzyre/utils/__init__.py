@@ -185,7 +185,7 @@ def resolve_gossip(port, address=None):
 
 
 def resolve_gossip_bootstrap(server):
-    import dns
+    import dns.resolver
     if ":" in server:
         server = server.split(":")[0]
 
