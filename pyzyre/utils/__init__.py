@@ -66,7 +66,7 @@ def setup_logging(args):
 
 
 def setup_curve(args):
-    if not args.curve or args.publickey or args.cert or args.gossip_publickey or args.gossip_cert:
+    if not args.curve and not args.publickey and not args.cert and not args.gossip_publickey and not args.gossip_cert:
         return None
 
     if args.curve or args.publickey or args.cert or args.gossip_publickey:

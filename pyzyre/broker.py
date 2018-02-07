@@ -8,8 +8,11 @@ import zmq.auth
 from .client import Client, DefaultHandler
 from zmq.eventloop import ioloop
 from .utils import get_argument_parser, setup_logging, setup_curve
+from .constants import NODE_NAME
 
-CERT_PATH = os.getenv('ZYRE_CERT_PATH', os.path.expanduser('~/.curve/private_keys/server.key_secret'))
+CERT_PATH = os.getenv('ZYRE_CERT_PATH', os.path.expanduser('~/.curve'))
+SECRET_KEY_PATH = os.getenv('ZYRE_CERT_PATH', os.path.expanduser('~/.curve/broker.key_secret'))
+
 logger = logging.getLogger(__name__)
 
 
@@ -36,12 +39,18 @@ def main():
 
     setup_logging(args)
 
-    from pprint import pprint
+    if not NODE_NAME:
+        args.name = 'broker'
 
-    if os.path.exists(CERT_PATH):
-        certs = zmq.auth.load_certificate(CERT_PATH)
-        pprint(certs)
-        raise
+    if os.path.exists(SECRET_KEY_PATH):
+        public, secret = zmq.auth.load_certificate(SECRET_KEY_PATH)
+        if not secret:
+            raise("Error loading keys: %" % SECRET_KEY_PATH)
+
+        args.gossip_publickey = public
+        args.publickey = public
+        args.secretkey = secret
+        args.curve = True
 
     args.cert = setup_curve(args)
 
