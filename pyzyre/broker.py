@@ -4,11 +4,11 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import os
 
 import zmq
-import zmq.auth
 from .client import Client, DefaultHandler
 from zmq.eventloop import ioloop
 from .utils import get_argument_parser, setup_logging, setup_curve
 from .constants import NODE_NAME
+from pprint import pprint
 
 CERT_PATH = os.getenv('ZYRE_CERT_PATH', os.path.expanduser('~/.curve'))
 SECRET_KEY_PATH = os.getenv('ZYRE_CERT_PATH', os.path.expanduser('~/.curve/broker.key_secret'))
@@ -43,16 +43,15 @@ def main():
         args.name = 'broker'
 
     if os.path.exists(SECRET_KEY_PATH):
-        public, secret = zmq.auth.load_certificate(SECRET_KEY_PATH)
-        if not secret:
-            raise("Error loading keys: %" % SECRET_KEY_PATH)
-
-        args.gossip_publickey = public
-        args.publickey = public
-        args.secretkey = secret
-        args.curve = True
+        if not args.cert:
+            args.cert = SECRET_KEY_PATH
 
     args.cert = setup_curve(args)
+    if args.cert:
+        args.gossip_publickey = args.cert.public_txt()
+        args.publickey = args.cert.public_txt()
+        args.secretkey = args.cert.secret_txt()
+        args.curve = True
 
     ioloop.install()
     loop = ioloop.IOLoop.instance()

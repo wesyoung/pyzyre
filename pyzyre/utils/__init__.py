@@ -69,16 +69,18 @@ def setup_curve(args):
     if not args.curve and not args.publickey and not args.cert and not args.gossip_publickey and not args.gossip_cert:
         return None
 
-    if args.curve or args.publickey or args.cert or args.gossip_publickey:
+    if args.cert:
+        cert = Zcert.load(args.cert)
+        logger.info('CURVE configured via CERT...')
+        return cert
+
+    if args.curve or args.publickey or args.gossip_publickey:
         cert = Zcert()
         if args.publickey:
             if not args.secretkey:
                 raise SystemExit
 
             cert = Zcert.new_from_txt(args.publickey, args.secretkey)
-
-        if args.cert:
-            cert = Zcert.load(args.cert)
 
     if args.gossip_cert:
         gcert = Zcert.load(args.gossip_cert)
