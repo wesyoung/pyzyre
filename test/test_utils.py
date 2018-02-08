@@ -1,5 +1,5 @@
 import pytest
-from pyzyre.utils import resolve_endpoint, resolve_interface, resolve_address, resolve_gossip
+from pyzyre.utils import resolve_endpoint, address_to_interface, resolve_address, resolve_gossip
 import sys
 import netifaces as ni
 
@@ -24,7 +24,7 @@ def test_resolve_interface(iface):
     addr = resolve_address(iface)
     assert addr
 
-    i = resolve_interface(addr)
+    i = address_to_interface(addr)
     assert i
 
 
