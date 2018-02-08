@@ -2,8 +2,8 @@ import logging
 import os
 import os.path
 from time import sleep
-
 import names
+from pprint import pprint
 
 import zmq
 from czmq import Zactor, zactor_fn, create_string_buffer, lib
@@ -125,6 +125,15 @@ class Client(object):
             self.interface = self.gossip_bind
             if not self.endpoint:
                 self.endpoint = resolve_endpoint(SERVICE_PORT, interface=self.interface)
+
+        if len(self.endpoint) <= 5:
+            self.endpoint = resolve_endpoint(SERVICE_PORT, interface=self.endpoint)
+        elif not self.endpoint.startswith('tcp://'):
+            self.endpoint = 'tcp://%s' % self.endpoint
+
+        import re
+        if not re.match(r'\:\d{1,5}$', self.endpoint):
+            self.endpoint = '%s:%s' % (self.endpoint, SERVICE_PORT)
 
         self.gossip_bind = resolve_gossip(GOSSIP_PORT, self.gossip_bind)
         logger.debug('gossip-bind: %s' % self.gossip_bind)
