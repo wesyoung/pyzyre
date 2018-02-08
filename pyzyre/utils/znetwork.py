@@ -31,56 +31,43 @@ def default_interface():
         raise RuntimeError("Unable to determine endpoint address")
 
 
-def resolve_interface(address):
-    address = netaddr.IPAddress(address)
-
-    for i in ni.interfaces():
-        ii = ni.ifaddresses(i)
-        if not ii.get(ni.AF_INET):
-            continue
-
-        ii = ii[ni.AF_INET]
-        ii = netaddr.IPNetwork('{}/{}'.format(ii[0]['addr'], ii[0]['netmask']))
-        try:
-            if address in ii:
-                return i
-        except AttributeError:
-            pass
-
-
 def resolve_endpoint(port, address=None, interface=None):
     endpoint = address
 
-    if address:
-        if address.startswith(('ipc://', 'tcp://', 'udp://')):
-            return address
+    if not address:
+        if not interface or interface == '*':
+            endpoint = default_address()
+            endpoint = 'tcp://{}:{}'.format(endpoint, port)
+            return endpoint
 
-        try:
-            # is it an ip address?
-            socket.inet_aton(address)
-        except socket.error:
-            try:
-                # is it an FQDN?
-                socket.gethostbyname(address)
-            except socket.error:
-                if os.path.basename(address):
-                    return 'ipc://{}'.format(address)
-
-        if 'tcp://' not in address:
-            endpoint = 'tcp://%s' % address
-
-        if port not in address:
-            endpoint = '{}:{}'.format(endpoint, port)
-
-        return endpoint
-
-    if interface and interface != '*':
         i = interface_to_address(interface)
         endpoint = 'tcp://{}:{}'.format(i, port)
         return endpoint
 
-    endpoint = default_address()
-    endpoint = 'tcp://{}:{}'.format(endpoint, port)
+    if address.startswith(('ipc://', 'tcp://', 'udp://')):
+        return address
+
+    if os.path.exists(address):
+        return 'ipc://{}'.format(address)
+
+    # is it an ip address?
+    try:
+        socket.inet_aton(address)
+    except socket.error:
+        return None
+
+    # is it an FQDN?
+    try:
+        socket.gethostbyname(address)
+    except socket.error:
+        return None
+
+    if 'tcp://' not in address:
+        endpoint = 'tcp://%s' % address
+
+    if port not in address:
+        endpoint = '{}:{}'.format(endpoint, port)
+
     return endpoint
 
 
@@ -106,3 +93,21 @@ def resolve_gossip_bootstrap(server):
         return False
 
     return r[0].strings[0]
+
+
+# unused?
+def address_to_interface(address):
+    address = netaddr.IPAddress(address)
+
+    for i in ni.interfaces():
+        ii = ni.ifaddresses(i)
+        if not ii.get(ni.AF_INET):
+            continue
+
+        ii = ii[ni.AF_INET]
+        ii = netaddr.IPNetwork('{}/{}'.format(ii[0]['addr'], ii[0]['netmask']))
+        try:
+            if address in ii:
+                return i
+        except AttributeError:
+            pass

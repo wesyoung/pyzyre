@@ -242,19 +242,9 @@ class Client(object):
         self.actor.send_multipart(['WHISPER', address, message.encode('utf-8')])
         logger.debug('message sent via whisper')
 
-    # deprecate
-    def send_message(self, message, group=None, address=None):
-        if isinstance(message, str) and PYVERSION == 2:
-            message = unicode(message, 'utf-8')
-
-        if address:
-            logger.debug('sending whisper to %s' % address)
-            self.actor.send_multipart(['WHISPER', address, message.encode('utf-8')])
-            logger.debug('message sent via whisper')
-        else:
-            if not group:
-                group = self._groups[0]
-            self.actor.send_multipart(['SHOUT', group.encode('utf-8'), message.encode('utf-8')])
+    def leave(self, group):
+        logger.debug('sending LEAVE for %s' % group)
+        self.actor.send_multipart(['LEAVE', group])
 
     def handle_message(self, s, e):
         m = s.recv_multipart()

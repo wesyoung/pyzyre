@@ -136,6 +136,11 @@ def task(pipe, arg):
                     logger.debug('shouting[%s]: %s' % (g, msg))
                     n.shouts(g, "%s", msg)
 
+                elif msg_type == 'LEAVE':
+                    g = message.popstr()
+                    logger.debug('leaving: %s' % g)
+                    n.leave(g)
+
                 else:
                     logger.warn('unknown message type: {}'.format(msg_type))
 
@@ -184,6 +189,7 @@ def task(pipe, arg):
 
                 else:
                     logger.warn('unknown message type: {}'.format(msg_type))
+
         except Exception as e:
             logger.exception("Unhandled exception in main io loop")
 
