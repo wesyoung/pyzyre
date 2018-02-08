@@ -10,8 +10,7 @@ from czmq import Zactor, zactor_fn, create_string_buffer, lib
 
 from ._task import task as client_task
 from ..utils import resolve_gossip, resolve_endpoint, resolve_gossip_bootstrap
-from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_GROUP, PYVERSION, GOSSIP_CONNECT, ENDPOINT, \
-    CURVE_ALLOW_ANY, NODE_NAME
+from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_GROUP, GOSSIP_CONNECT, ENDPOINT, CURVE_ALLOW_ANY, NODE_NAME
 
 ZAUTH_TRACE = os.getenv('ZAUTH_TRACE', False)
 
@@ -43,13 +42,13 @@ class DefaultHandler(object):
 
 class Client(object):
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        if self.actor:
-            self.stop_zyre()
-        return self
+    # def __enter__(self):
+    #     return self
+    #
+    # def __exit__(self, type, value, traceback):
+    #     if self.actor:
+    #         self.stop_zyre()
+    #     return self
 
     def __init__(self, handler=DefaultHandler(), **kwargs):
 
@@ -115,9 +114,6 @@ class Client(object):
 
         return zauth
 
-    def _init_beacon(self):
-        os.environ["ZSYS_INTERFACE"] = self.interface
-
     def _init_gossip_bind(self):
         # is gossip_bind an interface?
         if len(self.gossip_bind) <= 5:
@@ -180,7 +176,7 @@ class Client(object):
             self._init_gossip_connect()
 
         if self.beacon:
-            self._init_beacon()
+            os.environ["ZSYS_INTERFACE"] = self.interface
 
         actor_args = [
             'group=%s' % self.group,
@@ -223,8 +219,8 @@ class Client(object):
         del self._actor
 
         if self.zauth:
-            del self.zauth
-            self.zauth = None
+            del self.zauth  # destroy old actor
+            self.zauth = None  # re-establish attrib
 
     def join(self, group):
         logger.debug('sending join')
@@ -268,11 +264,11 @@ class Client(object):
 
         elif m_type == 'EXIT':
             peer, peers_remining = m
-            if self.gossip_connect and peers_remining == '0' or self.first_node == peer:
-                self.parent_loop.remove_handler(self.actor)
-                self.stop_zyre()
-                self.start_zyre()
-                self.parent_loop.add_handler(self.actor, self.handle_message, zmq.POLLIN)
+            # if self.gossip_connect and peers_remining == '0' or self.first_node == peer:
+            #     self.parent_loop.remove_handler(self.actor)
+            #     self.stop_zyre()
+            #     self.start_zyre()
+            #     self.parent_loop.add_handler(self.actor, self.handle_message, zmq.POLLIN)
             self.handler.on_exit(self, peer)
 
         elif m_type == 'JOIN':

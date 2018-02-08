@@ -93,6 +93,7 @@ def task(pipe, arg):
     pipe_zsock_s.signal(0)  # OK
 
     peers = {}
+    peer_first = None
     terminated = False
     # TODO- catch SIGINT
     while not terminated:
@@ -154,6 +155,9 @@ def task(pipe, arg):
                 if msg_type == "ENTER":
                     logger.debug('ENTER {} - {}'.format(e.peer_name(), e.peer_uuid()))
                     peers[e.peer_name()] = e.peer_uuid()
+                    if not peer_first:
+                        peer_first = e.peer_name() # this should be the gossip node
+
                     pipe_s.send_multipart(['ENTER', e.peer_uuid(), e.peer_name()])
                     #headers = e.headers() # zlist
 
@@ -179,6 +183,9 @@ def task(pipe, arg):
                     logger.debug('EXIT [{}] [{}]'.format(e.group(), e.peer_name()))
                     if e.peer_name() in peers:
                         del peers[e.peer_name()]
+                        if len(peers) == 0 or e.peer_name() == peer_first and args.get('gossip_connect'):
+                            logger.debug('lost connection to gossip node, reconnecting...')
+                            n.gossip_connect(args['gossip_connect'])
                     pipe_s.send_multipart(['EXIT', e.peer_name(), str(len(peers))])
 
                 elif msg_type == 'EVASIVE':
