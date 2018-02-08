@@ -33,3 +33,26 @@ LOGLEVEL = os.getenv('ZYRE_LOGLEVEL', 'ERROR')
 
 ZMQ_LINGER = os.getenv('ZMQ_LINGER', 0)
 ZYRE_GATEWAY = os.getenv('ZYRE_GATEWAY')
+
+
+class DefaultHandler(object):
+    def on_shout(self, client, group, peer, address, message):
+        pass
+
+    def on_whisper(self, client, peer, message):
+        pass
+
+    def on_enter(self, client, peer):
+        pass
+
+    def on_join(self, client, peer, group):
+        pass
+
+    def on_leave(self, client, peer, group):
+        pass
+
+    def on_evasive(self, client, peer):
+        pass
+
+    def on_exit(self, client, peer):
+        pass

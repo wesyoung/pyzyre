@@ -10,34 +10,15 @@ from czmq import Zactor, zactor_fn, create_string_buffer, lib
 
 from ._task import task as client_task
 from ..utils import resolve_gossip, resolve_endpoint, resolve_gossip_bootstrap
-from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_GROUP, GOSSIP_CONNECT, ENDPOINT, CURVE_ALLOW_ANY, NODE_NAME
+from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_GROUP, GOSSIP_CONNECT, ENDPOINT, CURVE_ALLOW_ANY, \
+    NODE_NAME, DefaultHandler
 
 ZAUTH_TRACE = os.getenv('ZAUTH_TRACE', False)
 
 logger = logging.getLogger(__name__)
 
 
-class DefaultHandler(object):
-    def on_shout(self, client, group, peer, address, message):
-        pass
 
-    def on_whisper(self, client, peer, message):
-        pass
-
-    def on_enter(self, client, peer):
-        pass
-
-    def on_join(self, client, peer, group):
-        pass
-
-    def on_leave(self, client, peer, group):
-        pass
-
-    def on_evasive(self, client, peer):
-        pass
-
-    def on_exit(self, client, peer):
-        pass
 
 
 class Client(object):
