@@ -264,11 +264,6 @@ class Client(object):
 
         elif m_type == 'EXIT':
             peer, peers_remining = m
-            # if self.gossip_connect and peers_remining == '0' or self.first_node == peer:
-            #     self.parent_loop.remove_handler(self.actor)
-            #     self.stop_zyre()
-            #     self.start_zyre()
-            #     self.parent_loop.add_handler(self.actor, self.handle_message, zmq.POLLIN)
             self.handler.on_exit(self, peer)
 
         elif m_type == 'JOIN':
