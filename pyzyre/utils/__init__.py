@@ -6,7 +6,7 @@ from .znetwork import *
 from czmq import Zcert
 
 from pyzyre.constants import VERSION, ENDPOINT, PUBLIC_KEY, GOSSIP_PUBLIC_KEY, SECRET_KEY, CURVE_ALLOW_ANY, ZYRE_GROUP, \
-    NODE_NAME, CERT_PATH, LOG_FORMAT, LOGLEVEL
+    NODE_NAME, CERT_PATH, LOG_FORMAT, LOGLEVEL, GOSSIP_BIND, GOSSIP_CONNECT
 
 if not os.path.exists(CERT_PATH):
     CERT_PATH = None
@@ -36,8 +36,10 @@ def get_argument_parser(advanced=True):
     BasicArgs.add_argument('--publickey', help="specify CURVE public key [default %(default)s]", default=PUBLIC_KEY)
     BasicArgs.add_argument('--secretkey', help="specify CURVE secret key [default %(default)s]", default=SECRET_KEY)
 
-    BasicArgs.add_argument('--gossip-bind', help='bind gossip endpoint on this node')
-    BasicArgs.add_argument('--gossip-connect')
+    BasicArgs.add_argument('--gossip-bind', help='bind gossip endpoint on this node [default %(default)s]',
+                           default=GOSSIP_BIND)
+    BasicArgs.add_argument('--gossip-connect', help='connect to gossip endpoint [default %(default)s]',
+                           default=GOSSIP_CONNECT)
 
     BasicArgs.add_argument('--gossip-cert', help="specify gossip cert path [default %(default)s]", default=CERT_PATH)
     BasicArgs.add_argument('--gossip-publickey', help='specify CURVE public key [default %(default)s]',
