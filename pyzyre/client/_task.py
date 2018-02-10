@@ -44,6 +44,10 @@ def task(pipe, arg):
         cert = Zcert.new_from_txt(args['publickey'], args['secretkey'])
         n.set_zcert(cert)
 
+    if args.get('advertise_endpoint'):
+        logger.debug('setting advertise_endpoint: %s' % args['advertise_endpoint'])
+        n.set_advertised_endpoint(args['advertise_endpoint'])
+
     if args.get('endpoint'):
         logger.debug('setting endpoint: {}'.format(args['endpoint']))
         n.set_endpoint(args['endpoint'])

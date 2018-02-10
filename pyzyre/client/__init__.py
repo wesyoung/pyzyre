@@ -52,6 +52,7 @@ class Client(object):
         self.gossip_publickey = kwargs.get('gossip_publickey')
         self.first_node = None
         self.zauth = kwargs.get('zauth')
+        self.advertise_endpoint = kwargs.get('advertise_endpoint')
 
         self.name = kwargs.get('name', NODE_NAME)
         if not self.name:
@@ -175,6 +176,9 @@ class Client(object):
 
         if self.endpoint:
             actor_args.append('endpoint=%s' % self.endpoint)
+
+        if self.advertise_endpoint:
+            actor_args.append('advertise_endpoint=%s' % self.advertise_endpoint)
 
         if self.cert:
             actor_args.append('publickey=%s' % self.cert.public_txt())
