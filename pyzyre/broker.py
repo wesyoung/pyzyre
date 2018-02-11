@@ -1,11 +1,17 @@
 import logging
 import textwrap
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
+import os
 
 import zmq
 from .client import Client, DefaultHandler
 from zmq.eventloop import ioloop
 from .utils import get_argument_parser, setup_logging, setup_curve
+from .constants import NODE_NAME
+from pprint import pprint
+
+CERT_PATH = os.getenv('ZYRE_CERT_PATH', os.path.expanduser('~/.curve'))
+SECRET_KEY_PATH = os.getenv('ZYRE_CERT_PATH', os.path.expanduser('~/.curve/broker.key_secret'))
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +39,19 @@ def main():
 
     setup_logging(args)
 
+    if not NODE_NAME:
+        args.name = 'broker'
+
+    if os.path.exists(SECRET_KEY_PATH):
+        if not args.cert:
+            args.cert = SECRET_KEY_PATH
+
     args.cert = setup_curve(args)
+    if args.cert:
+        args.gossip_publickey = args.cert.public_txt()
+        args.publickey = args.cert.public_txt()
+        args.secretkey = args.cert.secret_txt()
+        args.curve = True
 
     ioloop.install()
     loop = ioloop.IOLoop.instance()

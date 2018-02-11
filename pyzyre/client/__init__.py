@@ -2,54 +2,31 @@ import logging
 import os
 import os.path
 from time import sleep
-
 import names
+from pprint import pprint
 
 import zmq
 from czmq import Zactor, zactor_fn, create_string_buffer, lib
 
 from ._task import task as client_task
 from ..utils import resolve_gossip, resolve_endpoint, resolve_gossip_bootstrap
-from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_GROUP, PYVERSION, GOSSIP_CONNECT, ENDPOINT, \
-    CURVE_ALLOW_ANY, NODE_NAME
+from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_GROUP, GOSSIP_CONNECT, ENDPOINT, CURVE_ALLOW_ANY, \
+    NODE_NAME, DefaultHandler
 
 ZAUTH_TRACE = os.getenv('ZAUTH_TRACE', False)
 
 logger = logging.getLogger(__name__)
 
 
-class DefaultHandler(object):
-    def on_shout(self, client, group, peer, address, message):
-        pass
-
-    def on_whisper(self, client, peer, message):
-        pass
-
-    def on_enter(self, client, peer):
-        pass
-
-    def on_join(self, client, peer, group):
-        pass
-
-    def on_leave(self, client, peer, group):
-        pass
-
-    def on_evasive(self, client, peer):
-        pass
-
-    def on_exit(self, client, peer):
-        pass
-
-
 class Client(object):
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        if self.actor:
-            self.stop_zyre()
-        return self
+    # def __enter__(self):
+    #     return self
+    #
+    # def __exit__(self, type, value, traceback):
+    #     if self.actor:
+    #         self.stop_zyre()
+    #     return self
 
     def __init__(self, handler=DefaultHandler(), **kwargs):
 
@@ -72,6 +49,7 @@ class Client(object):
         self.gossip_publickey = kwargs.get('gossip_publickey')
         self.first_node = None
         self.zauth = kwargs.get('zauth')
+        self.advertised_endpoint = kwargs.get('advertised_endpoint')
 
         self.name = kwargs.get('name', NODE_NAME)
         if not self.name:
@@ -115,9 +93,6 @@ class Client(object):
 
         return zauth
 
-    def _init_beacon(self):
-        os.environ["ZSYS_INTERFACE"] = self.interface
-
     def _init_gossip_bind(self):
         # is gossip_bind an interface?
         if len(self.gossip_bind) <= 5:
@@ -125,6 +100,15 @@ class Client(object):
             self.interface = self.gossip_bind
             if not self.endpoint:
                 self.endpoint = resolve_endpoint(SERVICE_PORT, interface=self.interface)
+
+        if len(self.endpoint) <= 5:
+            self.endpoint = resolve_endpoint(SERVICE_PORT, interface=self.endpoint)
+        elif not self.endpoint.startswith('tcp://'):
+            self.endpoint = 'tcp://%s' % self.endpoint
+
+        import re
+        if not re.match(r'\:\d{1,5}$', self.endpoint):
+            self.endpoint = '%s:%s' % (self.endpoint, SERVICE_PORT)
 
         self.gossip_bind = resolve_gossip(GOSSIP_PORT, self.gossip_bind)
         logger.debug('gossip-bind: %s' % self.gossip_bind)
@@ -137,9 +121,10 @@ class Client(object):
                 raise RuntimeError('A local interface must be specified')
 
     def _init_gossip_connect(self):
-        if self.cert and not self.gossip_publickey:
-            self.gossip_publickey = resolve_gossip_bootstrap(self.gossip_connect)
-            logger.debug(self.gossip_publickey)
+        #TODO
+        # if self.cert and not self.gossip_publickey:
+        #     self.gossip_publickey = resolve_gossip_bootstrap(self.gossip_connect)
+        #     logger.debug(self.gossip_publickey)
 
         try:
             logger.debug('resolving gossip-connect: {}'.format(self.gossip_connect))
@@ -170,7 +155,7 @@ class Client(object):
             self._init_gossip_connect()
 
         if self.beacon:
-            self._init_beacon()
+            os.environ["ZSYS_INTERFACE"] = self.interface
 
         actor_args = [
             'group=%s' % self.group,
@@ -188,6 +173,9 @@ class Client(object):
 
         if self.endpoint:
             actor_args.append('endpoint=%s' % self.endpoint)
+
+        if self.advertised_endpoint:
+            actor_args.append('advertised_endpoint=%s' % self.advertised_endpoint)
 
         if self.cert:
             actor_args.append('publickey=%s' % self.cert.public_txt())
@@ -213,8 +201,8 @@ class Client(object):
         del self._actor
 
         if self.zauth:
-            del self.zauth
-            self.zauth = None
+            del self.zauth  # destroy old actor
+            self.zauth = None  # re-establish attrib
 
     def join(self, group):
         logger.debug('sending join')
@@ -232,19 +220,9 @@ class Client(object):
         self.actor.send_multipart(['WHISPER', address, message.encode('utf-8')])
         logger.debug('message sent via whisper')
 
-    # deprecate
-    def send_message(self, message, group=None, address=None):
-        if isinstance(message, str) and PYVERSION == 2:
-            message = unicode(message, 'utf-8')
-
-        if address:
-            logger.debug('sending whisper to %s' % address)
-            self.actor.send_multipart(['WHISPER', address, message.encode('utf-8')])
-            logger.debug('message sent via whisper')
-        else:
-            if not group:
-                group = self._groups[0]
-            self.actor.send_multipart(['SHOUT', group.encode('utf-8'), message.encode('utf-8')])
+    def leave(self, group):
+        logger.debug('sending LEAVE for %s' % group)
+        self.actor.send_multipart(['LEAVE', group])
 
     def handle_message(self, s, e):
         m = s.recv_multipart()
@@ -268,11 +246,6 @@ class Client(object):
 
         elif m_type == 'EXIT':
             peer, peers_remining = m
-            if self.gossip_connect and peers_remining == '0' or self.first_node == peer:
-                self.parent_loop.remove_handler(self.actor)
-                self.stop_zyre()
-                self.start_zyre()
-                self.parent_loop.add_handler(self.actor, self.handle_message, zmq.POLLIN)
             self.handler.on_exit(self, peer)
 
         elif m_type == 'JOIN':

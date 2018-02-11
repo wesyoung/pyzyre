@@ -44,9 +44,15 @@ def task(pipe, arg):
         cert = Zcert.new_from_txt(args['publickey'], args['secretkey'])
         n.set_zcert(cert)
 
+    if args.get('advertised_endpoint'):
+        logger.debug('setting advertised_endpoint: %s' % args['advertised_endpoint'])
+        n.set_advertised_endpoint(args['advertise_endpoint'])
+
     if args.get('endpoint'):
         logger.debug('setting endpoint: {}'.format(args['endpoint']))
-        n.set_endpoint(args['endpoint'])
+        if n.set_endpoint(args['endpoint']) == -1:
+            logger.error('unable to bind endpoint: %s')
+            logger.warn('endpoint will be auto generated using tcp://*:*')
 
     if not args.get('beacon'):
         logger.debug('setting up gossip')
@@ -93,6 +99,7 @@ def task(pipe, arg):
     pipe_zsock_s.signal(0)  # OK
 
     peers = {}
+    peer_first = None
     terminated = False
     # TODO- catch SIGINT
     while not terminated:
@@ -136,6 +143,11 @@ def task(pipe, arg):
                     logger.debug('shouting[%s]: %s' % (g, msg))
                     n.shouts(g, "%s", msg)
 
+                elif msg_type == 'LEAVE':
+                    g = message.popstr()
+                    logger.debug('leaving: %s' % g)
+                    n.leave(g)
+
                 else:
                     logger.warn('unknown message type: {}'.format(msg_type))
 
@@ -149,6 +161,9 @@ def task(pipe, arg):
                 if msg_type == "ENTER":
                     logger.debug('ENTER {} - {}'.format(e.peer_name(), e.peer_uuid()))
                     peers[e.peer_name()] = e.peer_uuid()
+                    if not peer_first:
+                        peer_first = e.peer_name() # this should be the gossip node
+
                     pipe_s.send_multipart(['ENTER', e.peer_uuid(), e.peer_name()])
                     #headers = e.headers() # zlist
 
@@ -174,6 +189,9 @@ def task(pipe, arg):
                     logger.debug('EXIT [{}] [{}]'.format(e.group(), e.peer_name()))
                     if e.peer_name() in peers:
                         del peers[e.peer_name()]
+                        if len(peers) == 0 or e.peer_name() == peer_first and args.get('gossip_connect'):
+                            logger.debug('lost connection to gossip node, reconnecting...')
+                            n.gossip_connect(args['gossip_connect'])
                     pipe_s.send_multipart(['EXIT', e.peer_name(), str(len(peers))])
 
                 elif msg_type == 'EVASIVE':
@@ -184,6 +202,7 @@ def task(pipe, arg):
 
                 else:
                     logger.warn('unknown message type: {}'.format(msg_type))
+
         except Exception as e:
             logger.exception("Unhandled exception in main io loop")
 
