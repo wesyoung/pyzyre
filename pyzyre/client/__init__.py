@@ -174,8 +174,8 @@ class Client(object):
         if self.endpoint:
             actor_args.append('endpoint=%s' % self.endpoint)
 
-        if self.advertise_endpoint:
-            actor_args.append('advertise_endpoint=%s' % self.advertise_endpoint)
+        if self.advertised_endpoint:
+            actor_args.append('advertised_endpoint=%s' % self.advertised_endpoint)
 
         if self.cert:
             actor_args.append('publickey=%s' % self.cert.public_txt())
