@@ -27,7 +27,7 @@ def get_argument_parser(advanced=True):
     BasicArgs.add_argument('-i', '--interface', help='specify zsys_interface for beacon')
     BasicArgs.add_argument('-l', '--endpoint', help='specify ip listening endpoint [default %(default)s]',
                            default=ENDPOINT)
-    BasicArgs.add_argument('--advertise-endpoint', help='[GOSSIP ONLY] advertise an alternative endpoint (NAT)')
+    BasicArgs.add_argument('--advertised-endpoint', help='[GOSSIP ONLY] advertise an alternative endpoint (NAT)')
 
     BasicArgs.add_argument('--name', help='specify node name [default %(default)s]', default=NODE_NAME)
     BasicArgs.add_argument('--group', default=ZYRE_GROUP)

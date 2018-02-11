@@ -18,9 +18,6 @@ ZAUTH_TRACE = os.getenv('ZAUTH_TRACE', False)
 logger = logging.getLogger(__name__)
 
 
-
-
-
 class Client(object):
 
     # def __enter__(self):
@@ -52,7 +49,7 @@ class Client(object):
         self.gossip_publickey = kwargs.get('gossip_publickey')
         self.first_node = None
         self.zauth = kwargs.get('zauth')
-        self.advertise_endpoint = kwargs.get('advertise_endpoint')
+        self.advertised_endpoint = kwargs.get('advertised_endpoint')
 
         self.name = kwargs.get('name', NODE_NAME)
         if not self.name:
