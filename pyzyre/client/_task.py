@@ -46,7 +46,7 @@ def task(pipe, arg):
 
     if args.get('advertised_endpoint'):
         logger.debug('setting advertised_endpoint: %s' % args['advertised_endpoint'])
-        n.set_advertised_endpoint(args['advertise_endpoint'])
+        n.set_advertised_endpoint(args['advertised_endpoint'])
 
     if args.get('endpoint'):
         logger.debug('setting endpoint: {}'.format(args['endpoint']))
