@@ -189,7 +189,7 @@ def task(pipe, arg):
                     logger.debug('EXIT [{}] [{}]'.format(e.group(), e.peer_name()))
                     if e.peer_name() in peers:
                         del peers[e.peer_name()]
-                        if len(peers) == 0 or e.peer_name() == peer_first and args.get('gossip_connect'):
+                        if args.get('gossip_connect') and (len(peers) == 0 or e.peer_name() == peer_first):
                             logger.debug('lost connection to gossip node, reconnecting...')
                             n.gossip_connect(args['gossip_connect'])
                     pipe_s.send_multipart(['EXIT', e.peer_name(), str(len(peers))])
