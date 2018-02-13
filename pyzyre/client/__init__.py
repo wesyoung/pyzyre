@@ -101,6 +101,7 @@ class Client(object):
 
     def _init_gossip_bind(self):
         self.gossip_bind = resolve_endpoint(self.gossip_bind, GOSSIP_PORT)
+        self.endpoint = resolve_endpoint(self.endpoint, SERVICE_PORT)
 
     def _init_zyre(self):
         # setup czmq/zyre
