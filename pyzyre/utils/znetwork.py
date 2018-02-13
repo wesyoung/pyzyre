@@ -1,7 +1,9 @@
+import os
+import re
+import socket
 import netifaces as ni
 import netaddr
-import os
-import socket
+import dns.resolver
 from pprint import pprint
 
 
@@ -31,71 +33,51 @@ def default_interface():
         raise RuntimeError("Unable to determine endpoint address")
 
 
-def resolve_endpoint(port, address=None, interface=None):
-    endpoint = address
-
-    if not address:
-        if not interface or interface == '*':
+def resolve_endpoint(endpoint, port):
+    if len(endpoint) <= 5:
+        # we likely have an interface
+        if endpoint == '*':
             endpoint = default_address()
             endpoint = 'tcp://{}:{}'.format(endpoint, port)
             return endpoint
 
-        i = interface_to_address(interface)
-        endpoint = 'tcp://{}:{}'.format(i, port)
+        endpoint = interface_to_address(endpoint)
+        endpoint = 'tcp://{}:{}'.format(endpoint, port)
         return endpoint
 
-    if address.startswith(('ipc://', 'tcp://', 'udp://')):
-        return address
+    if endpoint.startswith('ipc://'):
+        return endpoint
 
-    if os.path.exists(address):
-        return 'ipc://{}'.format(address)
+    if os.path.exists(endpoint):
+        return 'ipc://{}'.format(endpoint)
+
+    if endpoint.startswith(('tcp://', 'udp://')):
+        if not re.search(r':\d{1,5}$', endpoint):
+            endpoint = '%s:%s' % (endpoint, port)
+
+        return endpoint
 
     # is it an ip address?
     try:
-        socket.inet_aton(address)
+        socket.inet_aton(endpoint)
     except socket.error:
         return None
 
     # is it an FQDN?
     try:
-        socket.gethostbyname(address)
+        socket.gethostbyname(endpoint)
     except socket.error:
         return None
 
-    if 'tcp://' not in address:
-        endpoint = 'tcp://%s' % address
+    if 'tcp://' not in endpoint:
+        endpoint = 'tcp://%s' % endpoint
 
-    if port not in address:
-        endpoint = '{}:{}'.format(endpoint, port)
+    if not re.search(r':\d{1,5}$', endpoint):
+        endpoint = '%s:%s' % (endpoint, port)
 
     return endpoint
 
 
-def resolve_gossip(port, address=None):
-    if not address:
-        address = resolve_endpoint(port)
-    elif len(address) <= 5:
-        # they sent us an interface...
-        address = resolve_endpoint(port, interface=address)
-    else:
-        address = resolve_endpoint(port, address)
-
-    return address
-
-
-def resolve_gossip_bootstrap(server):
-    import dns.resolver
-    if ":" in server:
-        server = server.split(":")[0]
-
-    r = dns.resolver.query(server, 'TXT')
-    if len(r) == 0:
-        return False
-
-    return r[0].strings[0]
-
-
-# unused?
 def address_to_interface(address):
     address = netaddr.IPAddress(address)
 

@@ -46,7 +46,7 @@ def task(pipe, arg):
 
     if args.get('advertised_endpoint'):
         logger.debug('setting advertised_endpoint: %s' % args['advertised_endpoint'])
-        n.set_advertised_endpoint(args['advertise_endpoint'])
+        n.set_advertised_endpoint(args['advertised_endpoint'])
 
     if args.get('endpoint'):
         logger.debug('setting endpoint: {}'.format(args['endpoint']))
@@ -189,9 +189,13 @@ def task(pipe, arg):
                     logger.debug('EXIT [{}] [{}]'.format(e.group(), e.peer_name()))
                     if e.peer_name() in peers:
                         del peers[e.peer_name()]
-                        if len(peers) == 0 or e.peer_name() == peer_first and args.get('gossip_connect'):
+                        if args.get('gossip_connect') and (len(peers) == 0 or e.peer_name() == peer_first):
                             logger.debug('lost connection to gossip node, reconnecting...')
-                            n.gossip_connect(args['gossip_connect'])
+
+                            if args.get('gossip_publickey'):
+                                n.gossip_connect_curve(args['gossip_publickey'], args['gossip_connect'])
+                            else:
+                                n.gossip_connect(args['gossip_connect'])
                     pipe_s.send_multipart(['EXIT', e.peer_name(), str(len(peers))])
 
                 elif msg_type == 'EVASIVE':

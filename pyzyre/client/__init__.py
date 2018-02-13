@@ -4,12 +4,13 @@ import os.path
 from time import sleep
 import names
 from pprint import pprint
+import re
 
 import zmq
 from czmq import Zactor, zactor_fn, create_string_buffer, lib
 
 from ._task import task as client_task
-from ..utils import resolve_gossip, resolve_endpoint, resolve_gossip_bootstrap
+from ..utils import resolve_endpoint
 from pyzyre.constants import GOSSIP_PORT, SERVICE_PORT, ZYRE_GROUP, GOSSIP_CONNECT, ENDPOINT, CURVE_ALLOW_ANY, \
     NODE_NAME, DefaultHandler
 
@@ -19,14 +20,6 @@ logger = logging.getLogger(__name__)
 
 
 class Client(object):
-
-    # def __enter__(self):
-    #     return self
-    #
-    # def __exit__(self, type, value, traceback):
-    #     if self.actor:
-    #         self.stop_zyre()
-    #     return self
 
     def __init__(self, handler=DefaultHandler(), **kwargs):
 
@@ -93,43 +86,10 @@ class Client(object):
 
         return zauth
 
-    def _init_gossip_bind(self):
-        # is gossip_bind an interface?
-        if len(self.gossip_bind) <= 5:
-            # we need this to resolve the endpoint
-            self.interface = self.gossip_bind
-            if not self.endpoint:
-                self.endpoint = resolve_endpoint(SERVICE_PORT, interface=self.interface)
-
-        if len(self.endpoint) <= 5:
-            self.endpoint = resolve_endpoint(SERVICE_PORT, interface=self.endpoint)
-        elif not self.endpoint.startswith('tcp://'):
-            self.endpoint = 'tcp://%s' % self.endpoint
-
-        import re
-        if not re.match(r'\:\d{1,5}$', self.endpoint):
-            self.endpoint = '%s:%s' % (self.endpoint, SERVICE_PORT)
-
-        self.gossip_bind = resolve_gossip(GOSSIP_PORT, self.gossip_bind)
-        logger.debug('gossip-bind: %s' % self.gossip_bind)
-        logger.debug("ENDPOINT: %s" % self.endpoint)
-
-        if not self.endpoint:
-            if self.interface:
-                self.endpoint = resolve_endpoint(SERVICE_PORT, interface=self.interface)
-            else:
-                raise RuntimeError('A local interface must be specified')
-
     def _init_gossip_connect(self):
-        #TODO
-        # if self.cert and not self.gossip_publickey:
-        #     self.gossip_publickey = resolve_gossip_bootstrap(self.gossip_connect)
-        #     logger.debug(self.gossip_publickey)
-
         try:
             logger.debug('resolving gossip-connect: {}'.format(self.gossip_connect))
-            self.gossip_connect = resolve_gossip(GOSSIP_PORT, self.gossip_connect)
-            logger.debug('gossip-connect: %s' % self.gossip_connect)
+            self.gossip_connect = resolve_endpoint(self.gossip_connect, GOSSIP_PORT)
 
         except RuntimeError as e:
             logger.error(e)
@@ -137,11 +97,11 @@ class Client(object):
             self.beacon = 1
             self.gossip_connect = None
 
-        if not self.endpoint:
-            if self.interface:
-                self.endpoint = resolve_endpoint(SERVICE_PORT, interface=self.interface)
-            else:
-                raise RuntimeError('A local interface must be specified')
+        self.endpoint = resolve_endpoint(self.endpoint, SERVICE_PORT)
+
+    def _init_gossip_bind(self):
+        self.gossip_bind = resolve_endpoint(self.gossip_bind, GOSSIP_PORT)
+        self.endpoint = resolve_endpoint(self.endpoint, SERVICE_PORT)
 
     def _init_zyre(self):
         # setup czmq/zyre
