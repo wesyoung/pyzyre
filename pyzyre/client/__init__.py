@@ -97,7 +97,7 @@ class Client(object):
             self.beacon = 1
             self.gossip_connect = None
 
-        self.endpoint = resolve_endpoint(self.endpoint, GOSSIP_PORT)
+        self.endpoint = resolve_endpoint(self.endpoint, SERVICE_PORT)
 
     def _init_gossip_bind(self):
         self.gossip_bind = resolve_endpoint(self.gossip_bind, GOSSIP_PORT)

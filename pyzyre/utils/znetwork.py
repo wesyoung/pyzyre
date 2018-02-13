@@ -69,8 +69,6 @@ def resolve_endpoint(endpoint, port):
     except socket.error:
         return None
 
-    pprint(endpoint)
-
     if 'tcp://' not in endpoint:
         endpoint = 'tcp://%s' % endpoint
 
