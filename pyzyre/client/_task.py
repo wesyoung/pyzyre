@@ -191,7 +191,11 @@ def task(pipe, arg):
                         del peers[e.peer_name()]
                         if args.get('gossip_connect') and (len(peers) == 0 or e.peer_name() == peer_first):
                             logger.debug('lost connection to gossip node, reconnecting...')
-                            n.gossip_connect(args['gossip_connect'])
+
+                            if args.get('gossip_publickey'):
+                                n.gossip_connect_curve(args['gossip_publickey'], args['gossip_connect'])
+                            else:
+                                n.gossip_connect(args['gossip_connect'])
                     pipe_s.send_multipart(['EXIT', e.peer_name(), str(len(peers))])
 
                 elif msg_type == 'EVASIVE':

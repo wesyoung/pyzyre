@@ -1,5 +1,5 @@
 import pytest
-from pyzyre.utils import resolve_endpoint, address_to_interface, resolve_address, resolve_gossip
+from pyzyre.utils import resolve_endpoint, address_to_interface, resolve_address
 import sys
 import netifaces as ni
 
@@ -29,10 +29,5 @@ def test_resolve_interface(iface):
 
 
 def test_resolve_endpoint():
-    e = resolve_endpoint(5432)
-    assert e
-
-
-def test_resolve_gossip(iface):
-    e = resolve_gossip(5432, address=iface)
+    e = resolve_endpoint('*', port=5432)
     assert e
