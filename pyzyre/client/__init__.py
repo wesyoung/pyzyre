@@ -41,7 +41,7 @@ class Client(object):
         self.cert = kwargs.get('cert')
         self.gossip_publickey = kwargs.get('gossip_publickey')
         self.first_node = None
-        self.zauth = kwargs.get('zauth')
+        self.zauth = kwargs.get('zauth_curve_allow')
         self.advertised_endpoint = kwargs.get('advertised_endpoint')
 
         self.name = kwargs.get('name', NODE_NAME)
