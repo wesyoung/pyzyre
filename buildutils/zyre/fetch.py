@@ -25,7 +25,7 @@ libzyre_url = "https://github.com/zeromq/zyre/archive/v{vs}.tar.gz".format(
 )
 libzyre_checksum = "sha256:b978a999947ddb6722d956db2427869b313225e50518c4fbbf960a68109e3e91"
 
-if os.getenv("PYZYRE_ZYRE_BUILD_MASTER", False) == '1':
+if os.getenv("PYZYRE_BUILD_MASTER_ZYRE", False) == '1':
     libzyre_url = "https://github.com/zeromq/zyre/archive/master.tar.gz"
 
 
