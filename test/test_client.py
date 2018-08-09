@@ -44,10 +44,10 @@ def test_client_beacon(iface):
 
     loop.run_sync(test_fcn)
 
+    loop.remove_handler(c1.actor)
+
     c1.stop_zyre()
     c2.stop_zyre()
-
-    loop.remove_handler(c1.actor)
 
     # cleanup
     sleep(2)
@@ -110,10 +110,10 @@ def test_client_gossip(iface):
 
     loop.run_sync(test_fcn)
 
+    loop.remove_handler(c1.actor)
+
     c1.stop_zyre()
     c2.stop_zyre()
-
-    loop.remove_handler(c1.actor)
 
     # cleanup
     sleep(1)
@@ -155,10 +155,10 @@ def test_client_gossip_curve(iface):
 
     loop.run_sync(test_fcn)
 
+    loop.remove_handler(c1.actor)
+
     c1.stop_zyre()
     c2.stop_zyre()
-
-    loop.remove_handler(c1.actor)
 
     # cleanup
     sleep(1)
