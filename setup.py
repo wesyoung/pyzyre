@@ -236,10 +236,10 @@ setup(
     install_requires=[
         'netifaces',
         'netaddr',
-        'cython>=0.16',
+        'cython>=0.20',
         'names',
         'tornado',
-        'pyzmq>=16.0.1,<17',
+        'pyzmq',
         'dnspython>=1.15'
     ],
     classifiers=[
