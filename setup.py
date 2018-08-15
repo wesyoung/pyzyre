@@ -105,7 +105,6 @@ class zbuild_ext(build_ext_c):
         build_ext_c.build_extension(self, ext)
 
     def run(self):
-
         if 'develop' in sys.argv:
             return
 
@@ -119,19 +118,36 @@ class zbuild_ext(build_ext_c):
             return r
 
         cmds = []
-        cmds.append(
-            ['install_name_tool', '-change', 'build/lib/czmq/libzmq.so', 'czmq/libzmq.so',
-             'build/lib/czmq/libczmq.so']
-        )
-        cmds.append(
-            ['install_name_tool', '-change', 'build/lib/czmq/libzmq.so', 'czmq/libzmq.so',
-             'build/lib/zyre/libzyre.so']
-        )
+        if sys.version_info > (3,):
+            maj, min, _, _, _ = sys.version_info
+            ver_string = ".cpython-%s%sm-darwin" % (maj, min)
+            cmds.append(
+                ['install_name_tool', '-change', 'build/lib/czmq/libzmq%s.so' % ver_string, 'czmq/libzmq%.so' % ver_string,
+                 'build/lib/czmq/libczmq%s.so' % ver_string]
+            )
+            cmds.append(
+                ['install_name_tool', '-change', 'build/lib/czmq/libzmq%s.so' % ver_string, 'czmq/libzmq%s.so' % ver_string,
+                 'build/lib/zyre/libzyre%s.so' % ver_string]
+            )
 
-        cmds.append(
-            ['install_name_tool', '-change', 'build/lib/czmq/libczmq.so', 'czmq/libczmq.so',
-             'build/lib/zyre/libzyre.so']
-        )
+            cmds.append(
+                ['install_name_tool', '-change', 'build/lib/czmq/libczmq%s.so' % ver_string, 'czmq/libczmq%s.so' % ver_string,
+                 'build/lib/zyre/libzyre%s.so' % ver_string]
+            )
+        else:
+            cmds.append(
+                ['install_name_tool', '-change', 'build/lib/czmq/libzmq.so', 'czmq/libzmq.so',
+                 'build/lib/czmq/libczmq.so']
+            )
+            cmds.append(
+                ['install_name_tool', '-change', 'build/lib/czmq/libzmq.so', 'czmq/libzmq.so',
+                 'build/lib/zyre/libzyre.so']
+            )
+
+            cmds.append(
+                ['install_name_tool', '-change', 'build/lib/czmq/libczmq.so', 'czmq/libczmq.so',
+                 'build/lib/zyre/libzyre.so']
+            )
 
         for c in cmds:
             try:

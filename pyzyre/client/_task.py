@@ -17,7 +17,7 @@ TRACE = os.getenv('ZYRE_TRACE')
 
 
 def task(pipe, arg):
-    args = string_at(arg)
+    args = string_at(arg).decode('utf-8')
     args = dict(item.split("=", 1) for item in args.split(","))
 
     name = args.get('name')
@@ -27,7 +27,7 @@ def task(pipe, arg):
     group = args.get('group', ZYRE_GROUP)
 
     logger.debug('setting up node: %s' % name)
-    n = Zyre(name)
+    n = Zyre(name.encode('utf-8'))
 
     logger.debug('setting evasive timeout: {}'.format(EVASIVE_TIMEOUT))
     n.set_evasive_timeout(int(EVASIVE_TIMEOUT))
@@ -41,16 +41,16 @@ def task(pipe, arg):
         n.set_verbose()
 
     if args.get('publickey'):
-        cert = Zcert.new_from_txt(args['publickey'], args['secretkey'])
+        cert = Zcert.new_from_txt(args['publickey'].encode('utf-8'), args['secretkey'].encode('utf-8'))
         n.set_zcert(cert)
 
     if args.get('advertised_endpoint'):
         logger.debug('setting advertised_endpoint: %s' % args['advertised_endpoint'])
-        n.set_advertised_endpoint(args['advertised_endpoint'])
+        n.set_advertised_endpoint(args['advertised_endpoint'].encode('utf-8'))
 
     if args.get('endpoint'):
         logger.debug('setting endpoint: {}'.format(args['endpoint']))
-        if n.set_endpoint(args['endpoint']) == -1:
+        if n.set_endpoint(args['endpoint'].encode('utf-8')) == -1:
             logger.error('unable to bind endpoint: %s')
             logger.warn('endpoint will be auto generated using tcp://*:*')
 
@@ -58,13 +58,13 @@ def task(pipe, arg):
         logger.debug('setting up gossip')
         if args.get('gossip_bind'):
             logger.debug('binding gossip: {}'.format(args['gossip_bind']))
-            n.gossip_bind(args['gossip_bind'])
+            n.gossip_bind(args['gossip_bind'].encode('utf-8'))
         else:
             logger.debug('connecting to gossip group: {}'.format(args['gossip_connect']))
             if args.get('gossip_publickey'):
-                n.gossip_connect_curve(args['gossip_publickey'], args['gossip_connect'])
+                n.gossip_connect_curve(args['gossip_publickey'].encode('utf-8'), args['gossip_connect'].encode('utf-8'))
             else:
-                n.gossip_connect(args['gossip_connect'])
+                n.gossip_connect(args['gossip_connect'].encode('utf-8'))
 
     poller = zmq.Poller()
 
@@ -94,7 +94,7 @@ def task(pipe, arg):
     group = group.split('|')
     for g in group:
         logger.debug('joining: %s' % g)
-        n.join(g)
+        n.join(g.encode('utf-8'))
 
     pipe_zsock_s.signal(0)  # OK
 
@@ -117,7 +117,7 @@ def task(pipe, arg):
                 # message to quit
                 if msg_type == "$$STOP":
                     for g in group:
-                        n.leave(g)
+                        n.leave(g.encode('utf-8'))
                     terminated = True
 
                 elif msg_type == '$$ID':
@@ -140,13 +140,13 @@ def task(pipe, arg):
                 elif msg_type == 'SHOUT':
                     g = message.popstr()
                     msg = message.popstr()
-                    logger.debug('shouting[%s]: %s' % (g, msg))
-                    n.shouts(g, "%s", msg)
+                    logger.debug('shouting[%s]: %s' % (g.decode('utf-8'), msg))
+                    n.shouts(g,  msg)
 
                 elif msg_type == 'LEAVE':
                     g = message.popstr()
                     logger.debug('leaving: %s' % g)
-                    n.leave(g)
+                    n.leave(g.encode('utf-8'))
 
                 else:
                     logger.warn('unknown message type: {}'.format(msg_type))
@@ -164,26 +164,26 @@ def task(pipe, arg):
                     if not peer_first:
                         peer_first = e.peer_name() # this should be the gossip node
 
-                    pipe_s.send_multipart(['ENTER', e.peer_uuid(), e.peer_name()])
+                    pipe_s.send_multipart(['ENTER'.encode('utf-8'), e.peer_uuid(), e.peer_name()])
                     #headers = e.headers() # zlist
 
                 elif msg_type == 'LEAVE':
                     logger.debug('LEAVE [{}] [{}]'.format(e.group(), e.peer_name()))
-                    pipe_s.send_multipart(['LEAVE', e.peer_name(), e.group()])
+                    pipe_s.send_multipart(['LEAVE'.encode('utf-8'), e.peer_name(), e.group()])
 
                 elif msg_type == 'JOIN':
                     logger.debug('JOIN [{}] [{}]'.format(e.group(), e.peer_name()))
-                    pipe_s.send_multipart(['JOIN', e.peer_name(), e.group()])
+                    pipe_s.send_multipart(['JOIN'.encode('utf-8'), e.peer_name(), e.group()])
 
                 elif msg_type == "SHOUT":
                     m = e.get_msg().popstr()
                     logger.debug('SHOUT [{}] [{}]: {} - {}'.format(e.group(), e.peer_name(), e.peer_uuid(), m))
-                    pipe_s.send_multipart(['SHOUT', e.group(), e.peer_name(), e.peer_uuid(), m])
+                    pipe_s.send_multipart(['SHOUT'.encode('utf-8'), e.group(), e.peer_name(), e.peer_uuid(), m])
 
                 elif msg_type == "WHISPER":
                     m = e.get_msg().popstr()
                     logger.debug('WHISPER [{}]: {}'.format(e.peer_name(), m))
-                    pipe_s.send_multipart(['WHISPER', e.peer_name(), e.peer_uuid(), m])
+                    pipe_s.send_multipart(['WHISPER'.encode('utf-8'), e.peer_name(), e.peer_uuid(), m])
 
                 elif msg_type == 'EXIT':
                     logger.debug('EXIT [{}] [{}]'.format(e.group(), e.peer_name()))
@@ -196,13 +196,13 @@ def task(pipe, arg):
                                 n.gossip_connect_curve(args['gossip_publickey'], args['gossip_connect'])
                             else:
                                 n.gossip_connect(args['gossip_connect'])
-                    pipe_s.send_multipart(['EXIT', e.peer_name(), str(len(peers))])
+                    pipe_s.send_multipart(['EXIT'.encode('utf-8'), e.peer_name(), str(len(peers)).encode('utf-8')])
 
                 elif msg_type == 'EVASIVE':
                     if TRACE or TRACE_EVASIVE:
                         logger.debug('EVASIVE {}'.format(e.peer_name()))
 
-                    pipe_s.send_multipart(['EVASIVE', e.peer_name()])
+                    pipe_s.send_multipart(['EVASIVE'.encode('utf-8'), e.peer_name()])
 
                 else:
                     logger.warn('unknown message type: {}'.format(msg_type))

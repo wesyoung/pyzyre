@@ -38,7 +38,7 @@ def stage_platform_header(zmqroot):
             'libzmq_LIBS=-L../zeromq/src',
             'czmq_CFLAGS=-I../czmq/include',
             'czmq_LIBS=-L../czmq/src',
-            './configure'
+            './configure --without-docs'
 
         ]
         info("attempting ./configure to generate platform.h with: {}".format(configure_cmd))
