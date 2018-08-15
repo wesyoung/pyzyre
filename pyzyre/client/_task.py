@@ -17,8 +17,8 @@ TRACE = os.getenv('ZYRE_TRACE')
 
 
 def task(pipe, arg):
-    args = string_at(arg)
-    args = dict(item.split("=", 1) for item in args.decode('utf-8').split(","))
+    args = string_at(arg).decode('utf-8')
+    args = dict(item.split("=", 1) for item in args.split(","))
 
     name = args.get('name')
     if not name:
@@ -45,8 +45,8 @@ def task(pipe, arg):
         n.set_zcert(cert)
 
     if args.get('advertised_endpoint'):
-        logger.debug('setting advertised_endpoint: %s' % args['advertised_endpoint'].encode('utf-8'))
-        n.set_advertised_endpoint(args['advertised_endpoint'])
+        logger.debug('setting advertised_endpoint: %s' % args['advertised_endpoint'])
+        n.set_advertised_endpoint(args['advertised_endpoint'].encode('utf-8'))
 
     if args.get('endpoint'):
         logger.debug('setting endpoint: {}'.format(args['endpoint']))
@@ -196,7 +196,7 @@ def task(pipe, arg):
                                 n.gossip_connect_curve(args['gossip_publickey'], args['gossip_connect'])
                             else:
                                 n.gossip_connect(args['gossip_connect'])
-                    pipe_s.send_multipart(['EXIT'.encode('utf-8'), e.peer_name(), str(len(peers))])
+                    pipe_s.send_multipart(['EXIT'.encode('utf-8'), e.peer_name(), str(len(peers)).encode('utf-8')])
 
                 elif msg_type == 'EVASIVE':
                     if TRACE or TRACE_EVASIVE:

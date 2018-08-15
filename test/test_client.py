@@ -34,7 +34,6 @@ def test_client_beacon(iface):
     c2.start_zyre()
 
     from pprint import pprint
-    pprint()
 
     sleep(0.01)
 
@@ -64,6 +63,7 @@ def test_client_beacon_curve(iface):
     assert(cert1.public_txt())
 
     c1 = Client(interace=iface, cert=cert1, zauth=zauth)
+
     c1.start_zyre()
 
     sleep(0.01)

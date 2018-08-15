@@ -27,8 +27,11 @@ def default_address():
 
 
 def default_interface():
+
     try:
         return ni.gateways()['default'][ni.gateways()['default'].keys()[0]][1]
+    except TypeError:
+        return ni.gateways()['default'][list(ni.gateways()['default'].keys())[0]][1]
     except IndexError:
         raise RuntimeError("Unable to determine endpoint address")
 
