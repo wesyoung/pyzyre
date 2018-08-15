@@ -33,6 +33,9 @@ def test_client_beacon(iface):
     c2 = Client(interface=iface)
     c2.start_zyre()
 
+    from pprint import pprint
+    pprint()
+
     sleep(0.01)
 
     loop = ioloop.IOLoop.instance()

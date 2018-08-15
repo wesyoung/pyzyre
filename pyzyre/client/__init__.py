@@ -79,7 +79,7 @@ class Client(object):
 
         if allow:
             logger.debug("configuring Zauth...")
-            lib.zstr_sendx(zauth, "CURVE", allow, None)
+            lib.zstr_sendx(zauth, "CURVE".encode('utf-8'), allow, None)
             zauth.sock().wait()
 
         logger.debug('Zauth complete')
@@ -145,7 +145,7 @@ class Client(object):
             actor_args.append('gossip_publickey=%s' % self.gossip_publickey)
 
         actor_args = ','.join(actor_args)
-        self.actor_args = create_string_buffer(actor_args)
+        self.actor_args = create_string_buffer(actor_args.encode('utf-8'))
 
         self.actor = None
         self._actor = None
@@ -166,18 +166,18 @@ class Client(object):
 
     def join(self, group):
         logger.debug('sending join')
-        self.actor.send_multipart(['JOIN', group.encode('utf-8')])
+        self.actor.send_multipart(['JOIN', group])
 
     def shout(self, group, message):
         if isinstance(message, str):
             message = message.decode('utf-8')
-        self.actor.send_multipart(['SHOUT', group.encode('utf-8'), message.encode('utf-8')])
+        self.actor.send_multipart(['SHOUT'.encode('utf-8'), group.encode('utf-8'), message])
 
     def whisper(self, message, address):
         logger.debug('sending whisper to %s' % address)
         if isinstance(message, str):
             message = message.decode('utf-8')
-        self.actor.send_multipart(['WHISPER', address, message.encode('utf-8')])
+        self.actor.send_multipart(['WHISPER'.encode('utf-8'), address, message])
         logger.debug('message sent via whisper')
 
     def leave(self, group):

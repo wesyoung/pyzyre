@@ -39,7 +39,7 @@ def stage_platform_header(zmqroot):
         configure_cmd = [
             'libzmq_CFLAGS=-I../zeromq/include',
             'libzmq_LIBS=-L../zeromq/src',
-            './configure'
+            './configure --without-docs'
 
         ]
         info("attempting ./configure to generate platform.h with: {}".format(configure_cmd))
@@ -187,6 +187,7 @@ class Configure(build_ext):
 
         # http://stackoverflow.com/a/32765319/7205341
         if sys.platform == 'darwin':
+            info("setting up darwin compiler")
             from distutils import sysconfig
             vars = sysconfig.get_config_vars()
             vars['LDSHARED'] = vars['LDSHARED'].replace('-bundle', '-dynamiclib')
@@ -221,5 +222,4 @@ class Configure(build_ext):
             shutil.copyfile(f, pjoin(self.build_lib, bundledincludedir, basename(f)))
 
     def run(self):
-
         self.bundle_libczmq_extension()

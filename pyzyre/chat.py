@@ -40,7 +40,7 @@ def main():
         if content.startswith('CLIENT:'):
             address, message = content.split(' - ')
             address = address.split(':')[1]
-            client.whisper(message, address)
+            client.whisper(message.encode('utf-8'), address)
         else:
             client.shout(args.group, content.encode('utf-8'))
 
