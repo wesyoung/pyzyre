@@ -1,7 +1,7 @@
 proxytest.py
 *.tar.gz
-czmq
-zyre
+#czmq
+#zyre
 !buildutils/
 *.sh
 # Byte-compiled / optimized / DLL files
