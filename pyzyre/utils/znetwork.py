@@ -37,6 +37,9 @@ def default_interface():
 
 
 def resolve_endpoint(endpoint, port):
+    if not endpoint:
+        return
+
     if len(endpoint) <= 5:
         # we likely have an interface
         if endpoint == '*':
