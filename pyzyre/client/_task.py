@@ -10,7 +10,8 @@ from zyre import Zyre, ZyreEvent
 logger = logging.getLogger(__name__)
 
 EVASIVE_TIMEOUT = os.environ.get('ZYRE_EVASIVE_TIMEOUT', 5000)  # zyre defaults
-EXPIRED_TIMEOUT = os.environ.get('ZYRE_EXPIRED_TIMEOUT', 30000)
+EXPIRED_TIMEOUT = os.environ.get('ZYRE_EXPIRED_TIMEOUT', '45000')
+EXPIRED_TIMEOUT = int(EXPIRED_TIMEOUT)
 TRACE_EVASIVE = os.getenv('ZYRE_EVASITVE_TRACE')
 NODE_NAME = os.getenv('ZYRE_NODE_NAME')
 TRACE = os.getenv('ZYRE_TRACE')
@@ -33,7 +34,7 @@ def task(pipe, arg):
     n.set_evasive_timeout(int(EVASIVE_TIMEOUT))
 
     logger.debug('setting experation timer: {}'.format(EXPIRED_TIMEOUT))
-    n.set_expired_timeout(int(EXPIRED_TIMEOUT))
+    n.set_expired_timeout(EXPIRED_TIMEOUT)
 
     if TRACE:
         logger.info('setting verbose...')
@@ -56,6 +57,7 @@ def task(pipe, arg):
 
     if not args.get('beacon'):
         logger.debug('setting up gossip')
+
         if args.get('gossip_bind'):
             logger.debug('binding gossip: {}'.format(args['gossip_bind']))
             n.gossip_bind(args['gossip_bind'].encode('utf-8'))
@@ -102,6 +104,7 @@ def task(pipe, arg):
     peer_first = None
     terminated = False
     # TODO- catch SIGINT
+
     while not terminated:
         items = dict(poller.poll())
 
@@ -187,6 +190,9 @@ def task(pipe, arg):
 
                 elif msg_type == 'EXIT':
                     logger.debug('EXIT [{}] [{}]'.format(e.group(), e.peer_name()))
+                    # remove the peer from gossip
+                    if e.peer_uuid() != n.uuid():
+                        n.gossip_unpublish(e.peer_uuid())
                     if e.peer_name() in peers:
                         del peers[e.peer_name()]
                         if args.get('gossip_connect') and (len(peers) == 0 or e.peer_name() == peer_first):
