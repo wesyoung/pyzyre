@@ -103,7 +103,7 @@ def task(pipe, arg):
     terminated = False
     # TODO- catch SIGINT
 
-    from _actor_handler import NetworkHandler, AppHandler
+    from ._actor_handler import NetworkHandler, AppHandler
     handle = NetworkHandler(pipe_s, n, args, peers)
     app_handler = AppHandler(n, peers)
 
