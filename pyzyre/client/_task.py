@@ -1,6 +1,5 @@
 import logging
 import os
-import uuid
 
 import zmq
 from czmq import Zsock, string_at, Zmsg, Zcert
@@ -10,7 +9,8 @@ from zyre import Zyre, ZyreEvent
 logger = logging.getLogger(__name__)
 
 EVASIVE_TIMEOUT = os.environ.get('ZYRE_EVASIVE_TIMEOUT', 5000)  # zyre defaults
-EXPIRED_TIMEOUT = os.environ.get('ZYRE_EXPIRED_TIMEOUT', 30000)
+EXPIRED_TIMEOUT = os.environ.get('ZYRE_EXPIRED_TIMEOUT', '15000')
+EXPIRED_TIMEOUT = int(EXPIRED_TIMEOUT)
 TRACE_EVASIVE = os.getenv('ZYRE_EVASITVE_TRACE')
 NODE_NAME = os.getenv('ZYRE_NODE_NAME')
 TRACE = os.getenv('ZYRE_TRACE')
@@ -33,7 +33,7 @@ def task(pipe, arg):
     n.set_evasive_timeout(int(EVASIVE_TIMEOUT))
 
     logger.debug('setting experation timer: {}'.format(EXPIRED_TIMEOUT))
-    n.set_expired_timeout(int(EXPIRED_TIMEOUT))
+    n.set_expired_timeout(EXPIRED_TIMEOUT)
 
     if TRACE:
         logger.info('setting verbose...')
@@ -56,6 +56,7 @@ def task(pipe, arg):
 
     if not args.get('beacon'):
         logger.debug('setting up gossip')
+
         if args.get('gossip_bind'):
             logger.debug('binding gossip: {}'.format(args['gossip_bind']))
             n.gossip_bind(args['gossip_bind'].encode('utf-8'))
@@ -99,13 +100,18 @@ def task(pipe, arg):
     pipe_zsock_s.signal(0)  # OK
 
     peers = {}
-    peer_first = None
     terminated = False
     # TODO- catch SIGINT
+
+    from ._actor_handler import NetworkHandler, AppHandler
+    handle = NetworkHandler(pipe_s, n, args, peers)
+    app_handler = AppHandler(n, peers)
+
     while not terminated:
         items = dict(poller.poll())
 
         try:
+            # from the application to the network
             if pipe_s in items and items[pipe_s] == zmq.POLLIN:
                 message = Zmsg.recv(pipe)
 
@@ -123,86 +129,22 @@ def task(pipe, arg):
                 elif msg_type == '$$ID':
                     pipe_s.send_string(n.uuid().decode('utf-8'))
 
-                elif msg_type == 'WHISPER':
-                    address = message.popstr().decode('utf-8')
-                    msg = message.popstr().decode('utf-8')
-                    m = Zmsg()
-                    m.addstr(msg)
-                    address = peers[str(address)]
-                    address = uuid.UUID(address).hex.upper()
-                    n.whisper(address, m)
-
-                elif msg_type == 'JOIN':
-                    group = message.popstr().decode('utf-8')
-                    logger.debug('joining %s' % group)
-                    n.join(group)
-
-                elif msg_type == 'SHOUT':
-                    g = message.popstr()
-                    msg = message.popstr()
-                    logger.debug('shouting[%s]: %s' % (g.decode('utf-8'), msg))
-                    n.shouts(g,  msg)
-
-                elif msg_type == 'LEAVE':
-                    g = message.popstr()
-                    logger.debug('leaving: %s' % g)
-                    n.leave(g.encode('utf-8'))
+                elif msg_type in ['WHISPER', 'JOIN', 'SHOUT', 'LEAVE']:
+                    h = getattr(app_handler, 'on_' + msg_type.lower())
+                    h(message)
 
                 else:
                     logger.warn('unknown message type: {}'.format(msg_type))
 
+            # from network to the application
             elif ss in items and items[ss] == zmq.POLLIN:
                 e = ZyreEvent(n)
 
                 msg_type = e.type().decode('utf-8').upper()
-                #logger.debug('found ZyreEvent: %s' % msg_type)
-                #logger.debug(e.get_msg().popstr())
 
-                if msg_type == "ENTER":
-                    logger.debug('ENTER {} - {}'.format(e.peer_name(), e.peer_uuid()))
-                    peers[e.peer_name()] = e.peer_uuid()
-                    if not peer_first:
-                        peer_first = e.peer_name() # this should be the gossip node
-
-                    pipe_s.send_multipart(['ENTER'.encode('utf-8'), e.peer_uuid(), e.peer_name()])
-                    #headers = e.headers() # zlist
-
-                elif msg_type == 'LEAVE':
-                    logger.debug('LEAVE [{}] [{}]'.format(e.group(), e.peer_name()))
-                    pipe_s.send_multipart(['LEAVE'.encode('utf-8'), e.peer_name(), e.group()])
-
-                elif msg_type == 'JOIN':
-                    logger.debug('JOIN [{}] [{}]'.format(e.group(), e.peer_name()))
-                    pipe_s.send_multipart(['JOIN'.encode('utf-8'), e.peer_name(), e.group()])
-
-                elif msg_type == "SHOUT":
-                    m = e.get_msg().popstr()
-                    logger.debug('SHOUT [{}] [{}]: {} - {}'.format(e.group(), e.peer_name(), e.peer_uuid(), m))
-                    pipe_s.send_multipart(['SHOUT'.encode('utf-8'), e.group(), e.peer_name(), e.peer_uuid(), m])
-
-                elif msg_type == "WHISPER":
-                    m = e.get_msg().popstr()
-                    logger.debug('WHISPER [{}]: {}'.format(e.peer_name(), m))
-                    pipe_s.send_multipart(['WHISPER'.encode('utf-8'), e.peer_name(), e.peer_uuid(), m])
-
-                elif msg_type == 'EXIT':
-                    logger.debug('EXIT [{}] [{}]'.format(e.group(), e.peer_name()))
-                    if e.peer_name() in peers:
-                        del peers[e.peer_name()]
-                        if args.get('gossip_connect') and (len(peers) == 0 or e.peer_name() == peer_first):
-                            logger.debug('lost connection to gossip node, reconnecting...')
-
-                            if args.get('gossip_publickey'):
-                                n.gossip_connect_curve(args['gossip_publickey'], args['gossip_connect'])
-                            else:
-                                n.gossip_connect(args['gossip_connect'])
-                    pipe_s.send_multipart(['EXIT'.encode('utf-8'), e.peer_name(), str(len(peers)).encode('utf-8')])
-
-                elif msg_type == 'EVASIVE':
-                    if TRACE or TRACE_EVASIVE:
-                        logger.debug('EVASIVE {}'.format(e.peer_name()))
-
-                    pipe_s.send_multipart(['EVASIVE'.encode('utf-8'), e.peer_name()])
+                if msg_type in ['ENTER', 'EXIT', 'LEAVE', 'JOIN', 'SHOUT', 'WHISPER', 'EVASIVE']:
+                    h = getattr(handle, 'on_' + msg_type.lower())
+                    h(e)
 
                 else:
                     logger.warn('unknown message type: {}'.format(msg_type))
