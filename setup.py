@@ -257,6 +257,7 @@ setup(
         'tornado',
         'pyzmq',
         'dnspython>=1.15'
+        'csirtg-network'
     ],
     classifiers=[
         'Intended Audience :: Developers',
