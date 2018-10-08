@@ -1,7 +1,7 @@
 import os.path
 from argparse import ArgumentParser
 import logging
-from .znetwork import *
+from csirtg_network.interfaces import *
 
 from czmq import Zcert
 
