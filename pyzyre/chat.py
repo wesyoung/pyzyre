@@ -5,7 +5,7 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
 import zmq
 from pyzyre.client import Client
-from zmq.eventloop import ioloop
+from tornado import ioloop
 from pyzyre.utils import get_argument_parser, setup_logging, setup_curve
 
 logger = logging.getLogger('pyzyre.chat')
@@ -29,7 +29,6 @@ def main():
 
     args.cert = setup_curve(args)
 
-    ioloop.install()
     loop = ioloop.IOLoop.instance()
 
     client = Client(loop=loop, **args.__dict__)

@@ -10,9 +10,7 @@ from czmq import Zcert
 from pyzyre.client import Client
 from pyzyre.client._task import task
 from zmq.auth.thread import ThreadAuthenticator
-from zmq.eventloop import ioloop
-
-ioloop.install()
+from tornado import ioloop
 
 @pytest.fixture
 def iface():

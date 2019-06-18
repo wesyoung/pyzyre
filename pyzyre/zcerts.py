@@ -23,7 +23,7 @@ def main():
 
     certs = zmq.auth.create_certificates(args.path, 'test', metadata={'name': args.name})
     for c in certs:
-        os.chmod(c, 0600)
+        os.chmod(c, '0600')
 
     print("Generated certs in: %s" % CERTS_PATH)
 
